@@ -1,6 +1,5 @@
 import "dotenv/config";
-import { Stagehand } from "@browserbasehq/stagehand";
-import { z } from "zod";
+import { chromium } from "playwright";
 import * as fs from "fs/promises";
 import * as path from "path";
 import { fileURLToPath } from "url";
@@ -10,7 +9,6 @@ const OUT_PATH = path.join(__dirname, "../backend/data/berkeley.json");
 
 const SERPER_API_KEY = process.env.SERPER_API_KEY!;
 const GROQ_API_KEY = process.env.GROQ_API_KEY!;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY!;
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
 
@@ -52,6 +50,7 @@ Based only on their papers, return valid JSON only, no markdown:
       temperature: 0.3,
     }),
   });
+  if (!resp.ok) throw new Error(`Groq ${resp.status}: ${await resp.text()}`);
   const data = (await resp.json()) as { choices: { message: { content: string } }[] };
   const text = data.choices[0].message.content.replace(/```json|```/g, "").trim();
   return JSON.parse(text);
@@ -61,38 +60,51 @@ function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// ─── Schemas ──────────────────────────────────────────────────────────────────
+// ─── Page helpers ─────────────────────────────────────────────────────────────
 
-const FacultyListSchema = z.object({
-  people: z.array(
-    z.object({
-      name: z.string().describe("Full name of the faculty member"),
-      profileUrl: z.string().describe("URL of their department profile page"),
-    })
-  ),
-});
+const AGGREGATOR_HOSTS = [
+  "scholar.google.com", "linkedin.com", "researchgate.net",
+  "twitter.com", "x.com", "github.com", "dblp.org",
+  "semanticscholar.org", "youtube.com", "wikipedia.org",
+];
 
-const PersonalSiteSchema = z.object({
-  personalWebsite: z
-    .string()
-    .optional()
-    .describe("URL of their personal/lab website — not Google Scholar, LinkedIn, or the department homepage"),
-  email: z.string().optional().describe("Email address if visible"),
-});
+const PERSONAL_LABELS = new Set([
+  "home page", "homepage", "personal website", "personal page",
+  "website", "web page", "webpage", "personal site",
+  "visit website", "lab website", "lab page", "faculty page",
+]);
 
-const StudentListSchema = z.object({
-  people: z.array(
-    z.object({
-      name: z.string().describe("Full name of the PhD student"),
-      profileUrl: z.string().describe("URL of their personal website or profile"),
-    })
-  ),
-});
+// Extract all links from a page that look like personal/lab websites
+async function findPersonalWebsite(page: any, directoryUrl: string): Promise<string> {
+  const dirHost = new URL(directoryUrl).hostname;
+
+  const links: { href: string; label: string }[] = await page.$$eval(
+    "a[href]",
+    (anchors: HTMLAnchorElement[]) =>
+      anchors.map((a) => ({ href: a.href, label: (a.textContent ?? "").trim().toLowerCase() }))
+  );
+
+  let fallback = "";
+  for (const { href, label } of links) {
+    let parsed: URL;
+    try { parsed = new URL(href); } catch { continue; }
+
+    // Skip non-http, same host, bare homepages, aggregators
+    if (!href.startsWith("http")) continue;
+    if (parsed.hostname === dirHost) continue;
+    if (!parsed.pathname || parsed.pathname === "/") continue;
+    if (AGGREGATOR_HOSTS.some((h) => parsed.hostname.includes(h))) continue;
+
+    if (PERSONAL_LABELS.has(label)) return href; // high-confidence
+    if (!fallback) fallback = href;
+  }
+  return fallback;
+}
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  // Load existing results for resume support
+  // Resume support
   let existing: any[] = [];
   try {
     existing = JSON.parse(await fs.readFile(OUT_PATH, "utf-8"));
@@ -102,31 +114,28 @@ async function main() {
   }
   const alreadyDone = new Set(existing.map((p: any) => p.name.toLowerCase()));
 
-  // Stagehand's Google provider reads this specific env var name
-  process.env.GOOGLE_GENERATIVE_AI_API_KEY = GEMINI_API_KEY;
-
-  const stagehand = new Stagehand({
-    env: "LOCAL",
-    modelName: "google/gemini-2.0-flash-exp",
-    verbose: 1,
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    userAgent:
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
+      "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
   });
-
-  await stagehand.init();
-  const { page } = stagehand;
+  const page = await context.newPage();
 
   const allPeople: { name: string; profileUrl: string; type: string }[] = [];
   const seenNames = new Set<string>();
 
   function addPeople(people: { name: string; profileUrl: string }[], type: string) {
     for (const p of people) {
-      if (p.name && p.profileUrl && !seenNames.has(p.name.toLowerCase())) {
-        seenNames.add(p.name.toLowerCase());
+      const key = p.name.toLowerCase();
+      if (p.name && p.profileUrl && !seenNames.has(key)) {
+        seenNames.add(key);
         allPeople.push({ ...p, type });
       }
     }
   }
 
-  // ── Step 1: collect faculty from EECS listing pages ─────────────────────────
+  // ── Step 1: EECS faculty listing pages ──────────────────────────────────────
   const facultyListUrls = [
     "https://www2.eecs.berkeley.edu/Faculty/Lists/CS/faculty.html",
     "https://www2.eecs.berkeley.edu/Faculty/Lists/EE/faculty.html",
@@ -135,23 +144,60 @@ async function main() {
   for (const listUrl of facultyListUrls) {
     console.log(`\n[list] ${listUrl}`);
     await page.goto(listUrl, { waitUntil: "domcontentloaded" });
-    const result = await stagehand.page.extract({
-      instruction: "Extract every faculty member's full name and the URL of the link on their name that goes to their department profile page",
-      schema: FacultyListSchema,
-    });
-    addPeople(result.people, "Faculty");
-    console.log(`  -> ${result.people.length} faculty found`);
+
+    // Collect all links matching the /Faculty/Homepages/ pattern,
+    // keeping the best (longest) name per URL to handle img-only vs text links
+    const urlToName: Record<string, string> = await page.$$eval(
+      'a[href*="/Faculty/Homepages/"]',
+      (anchors: HTMLAnchorElement[]) => {
+        const map: Record<string, string> = {};
+        for (const a of anchors) {
+          const url = a.href;
+          const name = (a.textContent ?? "").trim() ||
+            (a.querySelector("img") as HTMLImageElement | null)?.alt?.trim() || "";
+          if (!map[url] || name.length > map[url].length) map[url] = name;
+        }
+        return map;
+      }
+    );
+
+    const faculty = Object.entries(urlToName)
+      .filter(([, name]) => name.length > 0)
+      .map(([profileUrl, name]) => ({ name, profileUrl }));
+
+    addPeople(faculty, "Faculty");
+    console.log(`  -> ${faculty.length} faculty found`);
   }
 
-  // ── Step 2: collect BAIR PhD students (JS-rendered) ─────────────────────────
+  // ── Step 2: BAIR PhD students (JS-rendered) ──────────────────────────────────
   console.log("\n[list] https://bair.berkeley.edu/students.html");
   await page.goto("https://bair.berkeley.edu/students.html", { waitUntil: "networkidle" });
-  const bairResult = await stagehand.page.extract({
-    instruction: "Extract every PhD student's full name and the URL of their personal website or profile page",
-    schema: StudentListSchema,
-  });
-  addPeople(bairResult.people, "PhD Student");
-  console.log(`  -> ${bairResult.people.length} BAIR students found`);
+
+  // BAIR renders student cards — grab any <a> whose text looks like a person name
+  const bairStudents: { name: string; profileUrl: string }[] = await page.$$eval(
+    "a[href]",
+    (anchors: HTMLAnchorElement[]) => {
+      const results: { name: string; profileUrl: string }[] = [];
+      const seen = new Set<string>();
+      for (const a of anchors) {
+        const name = (a.textContent ?? "").trim();
+        const url = a.href;
+        if (!name || !url || seen.has(url)) continue;
+        const words = name.split(/\s+/);
+        if (words.length < 2 || words.length > 4) continue;
+        if (!words[0][0]?.match(/[A-Z]/)) continue;
+        // skip nav/generic words
+        const lower = name.toLowerCase();
+        if (["research", "home", "more", "back", "contact"].some(w => lower.includes(w))) continue;
+        seen.add(url);
+        results.push({ name, profileUrl: url });
+      }
+      return results;
+    }
+  );
+
+  addPeople(bairStudents, "PhD Student");
+  console.log(`  -> ${bairStudents.length} BAIR students found`);
 
   console.log(`\n[scrape] ${allPeople.length} total people to process`);
 
@@ -170,17 +216,18 @@ async function main() {
     let personalUrl = person.profileUrl;
     let email = "";
 
-    // Faculty: visit directory page to find personal site
+    // Faculty: follow directory page to find personal site
     if (person.type === "Faculty") {
       try {
         await page.goto(person.profileUrl, { waitUntil: "domcontentloaded" });
-        const siteResult = await stagehand.page.extract({
-          instruction:
-            "Find the URL of this professor's personal or lab website. Skip Google Scholar, LinkedIn, ResearchGate, and bare department homepages (no path after the domain).",
-          schema: PersonalSiteSchema,
-        });
-        if (siteResult.personalWebsite) personalUrl = siteResult.personalWebsite;
-        if (siteResult.email) email = siteResult.email;
+        const found = await findPersonalWebsite(page, person.profileUrl);
+        if (found) personalUrl = found;
+
+        // Extract email from page text
+        const bodyText: string = await page.evaluate(() => document.body.innerText);
+        const emailMatch = bodyText.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+        if (emailMatch) email = emailMatch[0];
+
         console.log(`  -> ${personalUrl}`);
       } catch (e) {
         console.log(`  [warn] directory page failed: ${e}`);
@@ -207,7 +254,7 @@ async function main() {
       console.log(`  [enrich] failed: ${e}`);
     }
 
-    const record = {
+    enriched.push({
       name: person.name,
       url: personalUrl,
       university: "UC Berkeley",
@@ -216,15 +263,13 @@ async function main() {
       research_summary: researchSummary,
       research_areas: researchAreas,
       email,
-    };
+    });
 
-    enriched.push(record);
-
-    // Save after every person so progress survives a crash or rate-limit
+    // Save after every person
     await fs.writeFile(OUT_PATH, JSON.stringify([...existing, ...enriched], null, 2));
   }
 
-  await stagehand.close();
+  await browser.close();
   console.log(`\n[done] ${existing.length + enriched.length} people saved to ${OUT_PATH}`);
 }
 
