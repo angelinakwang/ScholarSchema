@@ -171,7 +171,8 @@ async function main() {
 
   // ── Step 2: BAIR PhD students (JS-rendered) ──────────────────────────────────
   console.log("\n[list] https://bair.berkeley.edu/students.html");
-  await page.goto("https://bair.berkeley.edu/students.html", { waitUntil: "networkidle" });
+  await page.goto("https://bair.berkeley.edu/students.html", { waitUntil: "load", timeout: 60000 });
+  await sleep(2000); // let JS render student cards
 
   // BAIR renders student cards — grab any <a> whose text looks like a person name
   const bairStudents: { name: string; profileUrl: string }[] = await page.$$eval(
