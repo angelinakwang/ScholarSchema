@@ -1,0 +1,9 @@
+flask
+flask-cors
+groq
+requests
+beautifulsoup4
+pdfplumber
+python-dotenv
+pymongo
+certifi
