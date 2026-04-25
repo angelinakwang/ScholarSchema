@@ -1,9 +1,15 @@
 """
-One-time script to build a local professor database from university faculty pages.
+One-time script to build a local professor/PhD-student database.
 Run: python scraper.py --university berkeley
 Output: data/berkeley.json
 
-Supports multiple universities — add entries to UNIVERSITY_CONFIGS below.
+For each person it:
+  1. Finds their personal website from the department/lab listing page
+  2. Searches Google Scholar for their recent papers
+  3. Calls Groq to summarize papers into research_summary + research_areas
+  4. Stores everything so query-time needs zero Scholar/scraping calls.
+
+To add a new university, add an entry to UNIVERSITY_CONFIGS below.
 """
 import requests
 from bs4 import BeautifulSoup
@@ -12,8 +18,17 @@ import re
 import time
 import argparse
 import os
+import sys
 
-# Browser User-Agent so university servers don't block us
+# Make sure agents/ is importable when running as a standalone script
+sys.path.insert(0, os.path.dirname(__file__))
+from agents.enrich import (
+    _serper_scholar_search,
+    _format_scholar_papers,
+    _extract_email_from_scholar,
+    _call_groq_summarize,
+)
+
 HEADERS = {
     'User-Agent': (
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
@@ -25,27 +40,53 @@ HEADERS = {
 }
 
 # ─── University configurations ────────────────────────────────────────────────
-# Each entry defines where to find faculty for a given university.
-# 'faculty_list_urls': pages that list many faculty with links to their profiles
-# 'profile_base': optional base URL to prepend to relative profile links
+#
+# faculty_sources: list of faculty listing pages
+#   - url: the listing page
+#   - profile_base: prepended to relative hrefs
+#   - profile_url_pattern: if set, only links whose href contains this string
+#     are collected (precise; no name-guessing needed)
+#
+# phd_sources: list of PhD student listing pages
+#   - url, profile_base as above
+#   - direct_links: True if hrefs on the listing page already point to the
+#     student's personal site (skip the directory-page hop)
+#   - profile_url_pattern: optional, same as above
+#
 UNIVERSITY_CONFIGS = {
     'berkeley': {
         'display_name': 'UC Berkeley',
-        'faculty_list_urls': [
-            'https://www2.eecs.berkeley.edu/Faculty/Lists/CS/faculty.html',
-            'https://www2.eecs.berkeley.edu/Faculty/Lists/EE/faculty.html',
+        'faculty_sources': [
+            {
+                'url': 'https://www2.eecs.berkeley.edu/Faculty/Lists/CS/faculty.html',
+                'profile_base': 'https://www2.eecs.berkeley.edu',
+                'profile_url_pattern': '/Faculty/Homepages/',
+            },
+            {
+                'url': 'https://www2.eecs.berkeley.edu/Faculty/Lists/EE/faculty.html',
+                'profile_base': 'https://www2.eecs.berkeley.edu',
+                'profile_url_pattern': '/Faculty/Homepages/',
+            },
         ],
-        'profile_base': 'https://www2.eecs.berkeley.edu',
-        # Only collect links whose href contains this string — much more
-        # precise than name detection when URLs follow a known pattern.
-        'profile_url_pattern': '/Faculty/Homepages/',
+        'phd_sources': [
+            {
+                'url': 'https://bair.berkeley.edu/students.html',
+                'profile_base': 'https://bair.berkeley.edu',
+                'direct_links': True,   # links go straight to personal sites
+            },
+        ],
     },
-    # Template for adding more universities:
+    # Template:
     # 'stanford': {
     #     'display_name': 'Stanford University',
-    #     'faculty_list_urls': ['https://cs.stanford.edu/people/faculty/'],
-    #     'profile_base': 'https://cs.stanford.edu',
-    #     'profile_url_pattern': '/people/',   # set if URLs follow a pattern
+    #     'faculty_sources': [
+    #         {
+    #             'url': 'https://cs.stanford.edu/people/faculty/',
+    #             'profile_base': 'https://cs.stanford.edu',
+    #             'profile_url_pattern': '/~',
+    #         }
+    #     ],
+    #     'phd_sources': [],
     # },
 }
 # ──────────────────────────────────────────────────────────────────────────────
@@ -62,50 +103,42 @@ def _get(url: str, timeout: int = 15) -> requests.Response | None:
 
 
 def _is_person_name(text: str) -> bool:
-    """True only if text looks like a first + last name (2-3 capitalized words)."""
     words = text.strip().split()
     if len(words) < 2 or len(words) > 3:
         return False
-    # Every word must start with a capital letter
     if not all(w[0].isupper() for w in words):
         return False
-    # No word should be a non-name word
     non_names = {
         'faculty', 'research', 'home', 'page', 'lab', 'back', 'next',
         'more', 'contact', 'all', 'list', 'view', 'here', 'click',
         'professor', 'department', 'center', 'institute', 'university',
         'the', 'and', 'for', 'new', 'about',
     }
-    if any(w.lower() in non_names for w in words):
-        return False
-    return True
+    return not any(w.lower() in non_names for w in words)
 
 
-def _extract_faculty_links(page_url: str, profile_base: str,
-                           profile_url_pattern: str = '') -> list[dict]:
+def _collect_links(source: dict) -> list[dict]:
     """
-    Scrape a faculty listing page and return {'name', 'profile_url'} dicts.
-
-    If profile_url_pattern is set, only links whose href contains that string
-    are collected — this is precise and fast for universities with predictable
-    URL structures (e.g. Berkeley's /Faculty/Homepages/).
-
-    Falls back to name-text detection when no pattern is configured.
+    Fetch a listing page and return {'name', 'profile_url'} dicts.
+    Filters by profile_url_pattern if set, else falls back to name detection.
     """
+    page_url = source['url']
+    profile_base = source.get('profile_base', '')
+    pattern = source.get('profile_url_pattern', '')
+
     print(f"\n[list] Fetching {page_url}")
     resp = _get(page_url)
     if not resp:
         return []
 
     soup = BeautifulSoup(resp.text, 'html.parser')
-    faculty = []
+    results = []
     seen_urls = set()
 
     for a in soup.find_all('a', href=True):
         href = a['href'].strip()
         name = a.get_text(strip=True)
 
-        # Build absolute URL first so we can pattern-match on it
         if href.startswith('http'):
             full_url = href
         elif href.startswith('/'):
@@ -113,194 +146,185 @@ def _extract_faculty_links(page_url: str, profile_base: str,
         else:
             continue
 
-        if profile_url_pattern:
-            # URL-pattern mode: precise, no name guessing needed
-            if profile_url_pattern not in full_url:
+        if pattern:
+            if pattern not in full_url:
                 continue
         else:
-            # Fallback: accept only links whose text looks like a person name
             if not _is_person_name(name):
                 continue
 
         if full_url in seen_urls:
             continue
         seen_urls.add(full_url)
+        results.append({'name': name, 'profile_url': full_url})
 
-        faculty.append({'name': name, 'profile_url': full_url})
-
-    print(f"  [list] Found {len(faculty)} faculty links")
-    return faculty
+    print(f"  [list] Found {len(results)} links")
+    return results
 
 
 def _find_personal_website(soup: BeautifulSoup, directory_url: str) -> str:
-    """
-    Given the parsed HTML of a university directory profile page, find the
-    link that points to the professor's actual personal website.
-
-    Strategy: look for links labelled with common personal-site labels first,
-    then fall back to the first external link that isn't a known aggregator.
-    """
-    directory_host = directory_url.split('/')[2]  # e.g. www2.eecs.berkeley.edu
-
+    """Find the personal website link on a university directory profile page."""
+    directory_host = directory_url.split('/')[2]
     personal_labels = {
         'home page', 'homepage', 'personal website', 'personal page',
         'website', 'web page', 'webpage', 'personal site', 'faculty page',
         'visit website', 'lab website', 'lab page',
     }
-    # Sites that are NOT the professor's personal website
     aggregator_hosts = {
         'scholar.google.com', 'linkedin.com', 'researchgate.net',
         'twitter.com', 'github.com', 'dblp.org', 'semanticscholar.org',
         'youtube.com', 'wikipedia.org',
     }
-
     candidates = []
     for a in soup.find_all('a', href=True):
         href = a['href'].strip()
         if not href.startswith('http'):
             continue
         host = href.split('/')[2]
-        # Skip same-domain links and known aggregators
         if host == directory_host:
             continue
         if any(agg in host for agg in aggregator_hosts):
             continue
-
         label = a.get_text(strip=True).lower()
         if label in personal_labels:
-            return href          # high-confidence match, return immediately
+            return href
         candidates.append(href)
-
-    # Fall back to first remaining external link
     return candidates[0] if candidates else ''
 
 
-def _extract_profile(professor: dict, university_display: str) -> dict | None:
-    """
-    Visit a professor's directory page, follow the link to their personal
-    website, and extract research interests + email from the personal site.
-    """
-    directory_url = professor['profile_url']
-    resp = _get(directory_url)
-    if not resp:
-        return {
-            'name': professor['name'],
-            'url': directory_url,
-            'university': university_display,
-            'research_interests': '',
-            'email': '',
-            'department': '',
-        }
-
-    dir_soup = BeautifulSoup(resp.text, 'html.parser')
-
-    # Step 1: find the personal website URL from the directory page
-    personal_url = _find_personal_website(dir_soup, directory_url)
-
-    # Step 2: fetch the personal site for richer research interest text
-    if personal_url:
-        print(f"    -> personal site: {personal_url}")
-        personal_resp = _get(personal_url)
-        soup = BeautifulSoup(personal_resp.text, 'html.parser') if personal_resp else dir_soup
-    else:
-        soup = dir_soup
-
+def _extract_email_from_page(soup: BeautifulSoup) -> str:
     text = soup.get_text(separator=' ', strip=True)
+    match = re.search(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', text)
+    return match.group(0) if match else ''
 
-    # Extract research interests from common section headings
-    research_interests = ''
-    patterns = [
-        r'[Rr]esearch [Ii]nterests?[:\s]+([^.]{20,400})',
-        r'[Rr]esearch [Aa]reas?[:\s]+([^.]{20,400})',
-        r'[Rr]esearch [Ff]ocus[:\s]+([^.]{20,400})',
-        r'[Ww]orks? on[:\s]+([^.]{20,400})',
-        r'[Ii]nterests?[:\s]+([^.]{20,400})',
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, text)
-        if match:
-            research_interests = match.group(1).strip()
-            break
 
-    if not research_interests:
-        meta = soup.find('meta', attrs={'name': 'description'})
-        if meta and meta.get('content'):
-            research_interests = meta['content'][:400]
+def _build_profile(person: dict, university: str, person_type: str,
+                   direct_link: bool = False) -> dict:
+    """
+    For one person:
+      1. Find their personal website (or use the listing link if direct_link=True)
+      2. Scholar-search their papers
+      3. Groq-summarize papers into research_summary + research_areas
+    Returns a fully enriched dict ready to store in the JSON database.
+    """
+    directory_url = person['profile_url']
+    personal_url = ''
+    email = ''
 
-    email_match = re.search(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', text)
-    email = email_match.group(0) if email_match else ''
+    if direct_link:
+        personal_url = directory_url
+    else:
+        resp = _get(directory_url)
+        if resp:
+            dir_soup = BeautifulSoup(resp.text, 'html.parser')
+            personal_url = _find_personal_website(dir_soup, directory_url)
+            email = _extract_email_from_page(dir_soup)
 
-    dept_match = re.search(
-        r'(Electrical Engineering|Computer Science|EECS|Statistics|Mathematics)',
-        text
-    )
-    department = dept_match.group(0) if dept_match else 'EECS'
+    if personal_url and personal_url != directory_url:
+        print(f"    -> {personal_url}")
+        personal_resp = _get(personal_url)
+        if personal_resp and not email:
+            email = _extract_email_from_page(BeautifulSoup(personal_resp.text, 'html.parser'))
+
+    # Scholar search — source of truth for research topics
+    papers = []
+    research_summary = ''
+    research_areas = []
+    try:
+        scholar_results = _serper_scholar_search(person['name'], university)
+        raw_papers, papers_text = _format_scholar_papers(scholar_results)
+        if not email:
+            email = _extract_email_from_scholar(scholar_results) or ''
+
+        if papers_text:
+            groq_result = _call_groq_summarize(person['name'], university, papers_text)
+            research_summary = groq_result.get('research_summary', '')
+            research_areas = groq_result.get('research_areas', [])
+            papers = [
+                {
+                    'title': p.get('title', ''),
+                    'year': p.get('year', ''),
+                    'one_line_summary': p.get('one_line_summary', ''),
+                }
+                for p in groq_result.get('papers', raw_papers)[:5]
+                if isinstance(p, dict)
+            ]
+    except Exception as e:
+        print(f"  [enrich] FAILED for {person['name']}: {e}")
 
     return {
-        'name': professor['name'],
-        'url': personal_url or directory_url,  # personal site if found, else directory page
-        'directory_url': directory_url,
-        'university': university_display,
-        'research_interests': research_interests,
+        'name': person['name'],
+        'url': personal_url or directory_url,
+        'directory_url': directory_url if not direct_link else '',
+        'university': university,
+        'type': person_type,
+        'papers': papers,
+        'research_summary': research_summary,
+        'research_areas': research_areas,
         'email': email,
-        'department': department,
     }
 
 
 def scrape_university(key: str) -> list[dict]:
     config = UNIVERSITY_CONFIGS[key]
     display_name = config['display_name']
-    profile_base = config.get('profile_base', '')
 
     print(f"\n{'='*50}")
     print(f"Scraping {display_name}")
     print(f"{'='*50}")
 
-    profile_url_pattern = config.get('profile_url_pattern', '')
-
-    # Step 1: collect all faculty links from listing pages
-    all_faculty = []
+    all_people = []
     seen_names = set()
-    for list_url in config['faculty_list_urls']:
-        for prof in _extract_faculty_links(list_url, profile_base, profile_url_pattern):
-            if prof['name'].lower() not in seen_names:
-                seen_names.add(prof['name'].lower())
-                all_faculty.append(prof)
 
-    print(f"\n[scrape] Total unique faculty to enrich: {len(all_faculty)}")
+    def _add(people, person_type):
+        for p in people:
+            key_name = p['name'].lower()
+            if key_name not in seen_names:
+                seen_names.add(key_name)
+                p['type'] = person_type
+                all_people.append(p)
 
-    # Step 2: visit each profile page
+    for source in config.get('faculty_sources', []):
+        _add(_collect_links(source), 'Faculty')
+
+    for source in config.get('phd_sources', []):
+        _add(_collect_links(source), 'PhD Student')
+
+    print(f"\n[scrape] {len(all_people)} unique people to enrich")
+
     enriched = []
-    for i, prof in enumerate(all_faculty, 1):
-        print(f"  [{i}/{len(all_faculty)}] {prof['name']}")
-        result = _extract_profile(prof, display_name)
-        if result:
-            enriched.append(result)
-        time.sleep(0.5)  # be polite
+    for i, person in enumerate(all_people, 1):
+        person_type = person.pop('type')
+        direct = any(
+            source.get('direct_links') and person['profile_url'].startswith(source['url'].rsplit('/', 1)[0])
+            for source in config.get('phd_sources', [])
+        )
+        print(f"  [{i}/{len(all_people)}] [{person_type}] {person['name']}")
+        result = _build_profile(person, display_name, person_type, direct_link=direct)
+        enriched.append(result)
+        time.sleep(0.5)
 
-    print(f"\n[scrape] Done. Enriched {len(enriched)} professors.")
+    print(f"\n[scrape] Done. {len(enriched)} people saved.")
     return enriched
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Build professor database from faculty pages')
+    parser = argparse.ArgumentParser(description='Build professor/PhD-student database')
     parser.add_argument('--university', required=True,
-                        choices=list(UNIVERSITY_CONFIGS.keys()),
-                        help='University key to scrape')
-    parser.add_argument('--out', default=None,
-                        help='Output JSON path (default: data/<university>.json)')
+                        choices=list(UNIVERSITY_CONFIGS.keys()))
+    parser.add_argument('--out', default=None)
     args = parser.parse_args()
 
-    professors = scrape_university(args.university)
+    people = scrape_university(args.university)
 
     out_path = args.out or os.path.join(
         os.path.dirname(__file__), 'data', f'{args.university}.json'
     )
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, 'w') as f:
-        json.dump(professors, f, indent=2)
+        json.dump(people, f, indent=2)
 
-    print(f"\n[done] Saved {len(professors)} professors to {out_path}")
+    print(f"\n[done] Saved {len(people)} people to {out_path}")
 
 
 if __name__ == '__main__':

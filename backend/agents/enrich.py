@@ -76,6 +76,35 @@ def _extract_email_from_scholar(scholar_results: list):
     return None
 
 
+def _call_groq_summarize(name: str, university: str, papers_text: str) -> dict:
+    """
+    Build a structured research profile from a person's papers alone.
+    Used at scrape time — no student interests involved.
+    """
+    prompt = f"""Researcher: {name} at {university}
+Their recent papers:
+{papers_text[:1500]}
+
+Based only on their papers, extract:
+1. A 2-sentence plain English summary of their research
+2. 3-5 specific research area tags (e.g. "reinforcement learning", "computer vision")
+3. A one-line summary of each paper
+
+Return valid JSON only, no markdown, no code blocks:
+{{"research_summary": "2 sentence overview",
+"research_areas": ["area1", "area2", "area3"],
+"papers": [{{"title": "title", "year": "2024", "one_line_summary": "what this paper does"}}]}}"""
+
+    response = groq_client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.3
+    )
+    text = response.choices[0].message.content
+    text = re.sub(r'```json|```', '', text).strip()
+    return json.loads(text)
+
+
 def _call_groq_profile(name, university, papers_text, interests, resume_text):
     safe_resume = resume_text[:300] if resume_text else 'not provided'
     prompt = f"""Researcher: {name} at {university}
@@ -190,3 +219,70 @@ def enrich_professors(professors: list, interests: str, resume_text: str) -> lis
         })
 
     return enriched
+
+
+def score_professors_from_db(professors: list, interests: str, resume_text: str) -> list:
+    """
+    Fast path for pre-enriched professors from local DB.
+    Papers and research summaries are already stored — only compute match scores.
+    No Scholar API calls needed.
+    """
+    if not GROQ_API_KEY:
+        raise ValueError('GROQ_API_KEY is missing from .env')
+
+    scored = []
+    for prof in professors:
+        name = prof.get('name', '')
+        university = prof.get('university', '')
+        print(f"[score] {name}")
+
+        papers = prof.get('papers', [])
+        papers_text = '\n'.join(
+            f"- {p.get('title', '')} ({p.get('year', '')}): {p.get('one_line_summary', '')}"
+            for p in papers
+        ) or prof.get('research_summary', '')
+
+        try:
+            safe_resume = resume_text[:300] if resume_text else 'not provided'
+            prompt = f"""Researcher: {name} at {university}
+Research summary: {prof.get('research_summary', '')}
+Research areas: {', '.join(prof.get('research_areas', []))}
+Recent papers:
+{papers_text[:800]}
+
+Student interests: {interests}
+Student resume: {safe_resume}
+
+Score strictly:
+90-100: Their specific papers directly match student experience
+70-89: General area overlap
+50-69: Loose connection
+Below 50: Poor match
+
+Return valid JSON only, no markdown:
+{{"match_score": integer, "match_reason": "one specific sentence explaining the match"}}"""
+
+            response = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3
+            )
+            text = response.choices[0].message.content
+            text = re.sub(r'```json|```', '', text).strip()
+            result = json.loads(text)
+            match_score = max(0, min(100, int(result.get('match_score', 50))))
+            match_reason = str(result.get('match_reason', '')).strip()
+        except Exception as e:
+            print(f"[score] FAILED for {name}: {e}")
+            match_score = 50
+            match_reason = 'Potential match based on research profile.'
+
+        scored.append({
+            **prof,
+            'profile_url': prof.get('url'),
+            'personal_website': prof.get('url'),
+            'match_score': match_score,
+            'match_reason': match_reason,
+        })
+
+    return scored
