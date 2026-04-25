@@ -121,34 +121,89 @@ def _extract_faculty_links(page_url: str, profile_base: str) -> list[dict]:
     return faculty
 
 
+def _find_personal_website(soup: BeautifulSoup, directory_url: str) -> str:
+    """
+    Given the parsed HTML of a university directory profile page, find the
+    link that points to the professor's actual personal website.
+
+    Strategy: look for links labelled with common personal-site labels first,
+    then fall back to the first external link that isn't a known aggregator.
+    """
+    directory_host = directory_url.split('/')[2]  # e.g. www2.eecs.berkeley.edu
+
+    personal_labels = {
+        'home page', 'homepage', 'personal website', 'personal page',
+        'website', 'web page', 'webpage', 'personal site', 'faculty page',
+        'visit website', 'lab website', 'lab page',
+    }
+    # Sites that are NOT the professor's personal website
+    aggregator_hosts = {
+        'scholar.google.com', 'linkedin.com', 'researchgate.net',
+        'twitter.com', 'github.com', 'dblp.org', 'semanticscholar.org',
+        'youtube.com', 'wikipedia.org',
+    }
+
+    candidates = []
+    for a in soup.find_all('a', href=True):
+        href = a['href'].strip()
+        if not href.startswith('http'):
+            continue
+        host = href.split('/')[2]
+        # Skip same-domain links and known aggregators
+        if host == directory_host:
+            continue
+        if any(agg in host for agg in aggregator_hosts):
+            continue
+
+        label = a.get_text(strip=True).lower()
+        if label in personal_labels:
+            return href          # high-confidence match, return immediately
+        candidates.append(href)
+
+    # Fall back to first remaining external link
+    return candidates[0] if candidates else ''
+
+
 def _extract_profile(professor: dict, university_display: str) -> dict | None:
     """
-    Visit a professor's profile page and extract research interests + email.
-    Returns enriched professor dict or None if the page is unreachable.
+    Visit a professor's directory page, follow the link to their personal
+    website, and extract research interests + email from the personal site.
     """
-    url = professor['profile_url']
-    resp = _get(url)
+    directory_url = professor['profile_url']
+    resp = _get(directory_url)
     if not resp:
-        # Keep the professor even without profile data
         return {
             'name': professor['name'],
-            'url': url,
+            'url': directory_url,
             'university': university_display,
             'research_interests': '',
             'email': '',
             'department': '',
         }
 
-    soup = BeautifulSoup(resp.text, 'html.parser')
+    dir_soup = BeautifulSoup(resp.text, 'html.parser')
+
+    # Step 1: find the personal website URL from the directory page
+    personal_url = _find_personal_website(dir_soup, directory_url)
+
+    # Step 2: fetch the personal site for richer research interest text
+    if personal_url:
+        print(f"    -> personal site: {personal_url}")
+        personal_resp = _get(personal_url)
+        soup = BeautifulSoup(personal_resp.text, 'html.parser') if personal_resp else dir_soup
+    else:
+        soup = dir_soup
+
     text = soup.get_text(separator=' ', strip=True)
 
-    # Extract research interests — look for common section headings
+    # Extract research interests from common section headings
     research_interests = ''
     patterns = [
-        r'[Rr]esearch [Ii]nterests?[:\s]+([^.]{20,300})',
-        r'[Rr]esearch [Aa]reas?[:\s]+([^.]{20,300})',
-        r'[Rr]esearch [Ff]ocus[:\s]+([^.]{20,300})',
-        r'[Ww]orks? on[:\s]+([^.]{20,300})',
+        r'[Rr]esearch [Ii]nterests?[:\s]+([^.]{20,400})',
+        r'[Rr]esearch [Aa]reas?[:\s]+([^.]{20,400})',
+        r'[Rr]esearch [Ff]ocus[:\s]+([^.]{20,400})',
+        r'[Ww]orks? on[:\s]+([^.]{20,400})',
+        r'[Ii]nterests?[:\s]+([^.]{20,400})',
     ]
     for pattern in patterns:
         match = re.search(pattern, text)
@@ -156,17 +211,14 @@ def _extract_profile(professor: dict, university_display: str) -> dict | None:
             research_interests = match.group(1).strip()
             break
 
-    # Fallback: grab text from a <meta name="description"> tag
     if not research_interests:
         meta = soup.find('meta', attrs={'name': 'description'})
         if meta and meta.get('content'):
-            research_interests = meta['content'][:300]
+            research_interests = meta['content'][:400]
 
-    # Extract email
     email_match = re.search(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', text)
     email = email_match.group(0) if email_match else ''
 
-    # Try to find department from page
     dept_match = re.search(
         r'(Electrical Engineering|Computer Science|EECS|Statistics|Mathematics)',
         text
@@ -175,7 +227,8 @@ def _extract_profile(professor: dict, university_display: str) -> dict | None:
 
     return {
         'name': professor['name'],
-        'url': url,
+        'url': personal_url or directory_url,  # personal site if found, else directory page
+        'directory_url': directory_url,
         'university': university_display,
         'research_interests': research_interests,
         'email': email,
