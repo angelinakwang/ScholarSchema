@@ -2,18 +2,25 @@ import os
 import json
 import re
 
-from groq import Groq
 import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
 SERPER_API_KEY = os.getenv('SERPER_API_KEY')
-GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 SERPER_SCHOLAR_URL = 'https://google.serper.dev/scholar'
-groq_client = Groq(api_key=os.getenv('GROQ_API_KEY'))
-print(f"[enrich] GROQ_API_KEY loaded: {'YES' if GROQ_API_KEY else 'NO - THIS IS THE PROBLEM'}")
-print(f"[enrich] SERPER_API_KEY loaded: {'YES' if SERPER_API_KEY else 'NO'}")
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+
+
+def _call_gemini(prompt: str) -> str:
+    resp = requests.post(
+        GEMINI_URL,
+        json={"contents": [{"parts": [{"text": prompt}]}]},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    return resp.json()['candidates'][0]['content']['parts'][0]['text']
 
 
 def _extract_person_name(raw_name: str) -> str:
@@ -77,31 +84,15 @@ def _extract_email_from_scholar(scholar_results: list):
 
 
 def _call_groq_summarize(name: str, university: str, papers_text: str) -> dict:
-    """
-    Build a structured research profile from a person's papers alone.
-    Used at scrape time — no student interests involved.
-    """
     prompt = f"""Researcher: {name} at {university}
 Their recent papers:
 {papers_text[:1500]}
 
-Based only on their papers, extract:
-1. A 2-sentence plain English summary of their research
-2. 3-5 specific research area tags (e.g. "reinforcement learning", "computer vision")
-3. A one-line summary of each paper
-
-Return valid JSON only, no markdown, no code blocks:
+Based only on their papers, return valid JSON only, no markdown:
 {{"research_summary": "2 sentence overview",
 "research_areas": ["area1", "area2", "area3"],
 "papers": [{{"title": "title", "year": "2024", "one_line_summary": "what this paper does"}}]}}"""
-
-    response = groq_client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3
-    )
-    text = response.choices[0].message.content
-    text = re.sub(r'```json|```', '', text).strip()
+    text = re.sub(r'```json|```', '', _call_gemini(prompt)).strip()
     return json.loads(text)
 
 
@@ -118,23 +109,15 @@ Score strictly:
 70-89: General area overlap
 50-69: Loose connection
 Below 50: Poor match
-Use the student resume to justify the score specifically.
 
-Return valid JSON only, no markdown, no code blocks:
+Return valid JSON only, no markdown:
 {{"research_summary": "2 sentence plain English overview of their work",
 "research_areas": ["area1", "area2", "area3"],
 "match_score": "integer 0-100",
 "match_reason": "one specific sentence about why they match",
-"papers": [{{"title": "title", "year": "2024", 
+"papers": [{{"title": "title", "year": "2024",
 "one_line_summary": "what this paper does in one sentence"}}]}}"""
-
-    response = groq_client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3
-    )
-    text = response.choices[0].message.content
-    text = re.sub(r'```json|```', '', text).strip()
+    text = re.sub(r'```json|```', '', _call_gemini(prompt)).strip()
     return json.loads(text)
 
 
@@ -152,8 +135,8 @@ def _normalize_papers(papers):
 
 
 def enrich_professors(professors: list, interests: str, resume_text: str) -> list:
-    if not GROQ_API_KEY:
-        raise ValueError('GROQ_API_KEY is missing from .env')
+    if not GEMINI_API_KEY:
+        raise ValueError('GEMINI_API_KEY is missing from .env')
 
     enriched = []
 
@@ -180,15 +163,15 @@ def enrich_professors(professors: list, interests: str, resume_text: str) -> lis
         if not papers_text:
             papers_text = f"- Snippet: {professor.get('snippet', '')}"
 
-        # Step 2: Call Groq
+        # Step 2: Call Gemini
         groq_result = None
         try:
             groq_result = _call_groq_profile(
                 name, university, papers_text, interests, resume_text
             )
-            print(f"[groq] SUCCESS for {name}, score: {groq_result.get('match_score')}")
+            print(f"[gemini] SUCCESS for {name}, score: {groq_result.get('match_score')}")
         except Exception as e:
-            print(f"[groq] FAILED for {name}: {type(e).__name__}: {e}")
+            print(f"[gemini] FAILED for {name}: {type(e).__name__}: {e}")
             groq_result = {
                 'research_summary': professor.get('snippet', '') or f"Researcher at {university} working on {interests}.",
                 'research_areas': [],
@@ -227,8 +210,8 @@ def score_professors_from_db(professors: list, interests: str, resume_text: str)
     Papers and research summaries are already stored — only compute match scores.
     No Scholar API calls needed.
     """
-    if not GROQ_API_KEY:
-        raise ValueError('GROQ_API_KEY is missing from .env')
+    if not GEMINI_API_KEY:
+        raise ValueError('GEMINI_API_KEY is missing from .env')
 
     scored = []
     for prof in professors:
@@ -262,13 +245,7 @@ Below 50: Poor match
 Return valid JSON only, no markdown:
 {{"match_score": integer, "match_reason": "one specific sentence explaining the match"}}"""
 
-            response = groq_client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.3
-            )
-            text = response.choices[0].message.content
-            text = re.sub(r'```json|```', '', text).strip()
+            text = re.sub(r'```json|```', '', _call_gemini(prompt)).strip()
             result = json.loads(text)
             match_score = max(0, min(100, int(result.get('match_score', 50))))
             match_reason = str(result.get('match_reason', '')).strip()
