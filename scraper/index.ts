@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = path.join(__dirname, "../backend/data/berkeley.json");
 
 const SERPER_API_KEY = process.env.SERPER_API_KEY!;
-const GROQ_API_KEY = process.env.GROQ_API_KEY!;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY!;
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
 
@@ -33,7 +33,7 @@ function formatPapers(results: any[]) {
   return lines.join("\n");
 }
 
-async function groqSummarize(name: string, university: string, papersText: string) {
+async function geminiSummarize(name: string, university: string, papersText: string) {
   const prompt = `Researcher: ${name} at ${university}
 Their recent papers:
 ${papersText.slice(0, 1500)}
@@ -41,18 +41,17 @@ ${papersText.slice(0, 1500)}
 Based only on their papers, return valid JSON only, no markdown:
 {"research_summary": "2 sentence overview", "research_areas": ["area1", "area2"], "papers": [{"title": "...", "year": "...", "one_line_summary": "..."}]}`;
 
-  const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${GROQ_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.3,
-    }),
-  });
-  if (!resp.ok) throw new Error(`Groq ${resp.status}: ${await resp.text()}`);
-  const data = (await resp.json()) as { choices: { message: { content: string } }[] };
-  const text = data.choices[0].message.content.replace(/```json|```/g, "").trim();
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+    }
+  );
+  if (!resp.ok) throw new Error(`Gemini ${resp.status}: ${await resp.text()}`);
+  const data = (await resp.json()) as any;
+  const text = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim();
   return JSON.parse(text);
 }
 
@@ -249,11 +248,10 @@ async function main() {
       const papersText = formatPapers(scholarResults);
 
       if (papersText) {
-        await sleep(3000); // respect Groq daily token limit
-        const groqResult = await groqSummarize(person.name, "UC Berkeley", papersText);
-        researchSummary = groqResult.research_summary ?? "";
-        researchAreas = groqResult.research_areas ?? [];
-        papers = (groqResult.papers ?? []).slice(0, 5);
+        const result = await geminiSummarize(person.name, "UC Berkeley", papersText);
+        researchSummary = result.research_summary ?? "";
+        researchAreas = result.research_areas ?? [];
+        papers = (result.papers ?? []).slice(0, 5);
       }
     } catch (e) {
       console.log(`  [enrich] failed: ${e}`);
