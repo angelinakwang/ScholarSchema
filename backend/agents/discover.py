@@ -1,10 +1,74 @@
 import requests
 import os
+import json
+import re
 from dotenv import load_dotenv
 load_dotenv()
 
 
 SERPER_API_KEY = os.getenv('SERPER_API_KEY')
+
+# Map university display names / common aliases to their local JSON file key
+_UNIVERSITY_DB_KEYS = {
+    'uc berkeley': 'berkeley',
+    'berkeley': 'berkeley',
+    'ucb': 'berkeley',
+}
+
+
+def _db_path(key: str) -> str:
+    return os.path.join(os.path.dirname(__file__), '..', 'data', f'{key}.json')
+
+
+def find_professors_from_db(university: str, interests: str) -> list | None:
+    """
+    Look up professors from a pre-built local JSON database.
+    Returns a list of professor dicts (same shape as find_professors output)
+    if the university has a local DB, or None if it doesn't.
+
+    Keyword-matches each professor's research_interests against the student's
+    interests string, then returns the top 10 by match count so the LLM has
+    enough candidates to score properly.
+    """
+    key = _UNIVERSITY_DB_KEYS.get(university.lower().strip())
+    if not key:
+        return None
+
+    path = _db_path(key)
+    if not os.path.exists(path):
+        print(f"[db] No local DB found at {path} — run scraper.py first")
+        return None
+
+    with open(path) as f:
+        professors = json.load(f)
+
+    print(f"[db] Loaded {len(professors)} professors from {path}")
+
+    # Tokenize interests into individual keywords for matching
+    interest_tokens = [
+        w.lower() for w in re.split(r'[\s,;/]+', interests) if len(w) > 2
+    ]
+
+    def _score(prof: dict) -> int:
+        haystack = (prof.get('research_interests', '') + ' ' + prof.get('name', '')).lower()
+        return sum(1 for token in interest_tokens if token in haystack)
+
+    scored = [(prof, _score(prof)) for prof in professors]
+    scored.sort(key=lambda x: x[1], reverse=True)
+
+    # Return top 10 with score > 0; fall back to top 10 overall if nothing matches
+    top = [p for p, s in scored if s > 0][:10] or [p for p, _ in scored[:10]]
+
+    return [
+        {
+            'name': p['name'],
+            'url': p['url'],
+            'snippet': p.get('research_interests', ''),
+            'university': p['university'],
+            'email': p.get('email', ''),
+        }
+        for p in top
+    ]
 
 
 def _base_name(name: str) -> str:

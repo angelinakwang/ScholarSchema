@@ -3,7 +3,7 @@ load_dotenv()
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from agents.discover import find_professors
+from agents.discover import find_professors, find_professors_from_db
 from agents.enrich import enrich_professors
 from agents.email_gen import draft_email
 from db import get_cached_results, save_results
@@ -31,8 +31,10 @@ def search():
         if cached:
             return jsonify({'results': cached, 'from_cache': True})
 
-        # Run pipeline
-        professors = find_professors(university, interests)
+        # Use local DB if available for this university, else fall back to live search
+        professors = find_professors_from_db(university, interests)
+        if professors is None:
+            professors = find_professors(university, interests)
         enriched = enrich_professors(professors, interests, resume_text)
 
         # Save to cache
