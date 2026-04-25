@@ -297,6 +297,7 @@ def _build_profile(person: dict, university: str, person_type: str,
 
         if papers_text:
             groq_result = _call_groq_summarize(person['name'], university, papers_text)
+            time.sleep(3)  # stay well under Groq's daily token limit
             research_summary = groq_result.get('research_summary', '')
             research_areas = groq_result.get('research_areas', [])
             papers = [
