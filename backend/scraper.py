@@ -325,9 +325,10 @@ def _build_profile(person: dict, university: str, person_type: str,
     }
 
 
-def scrape_university(key: str) -> list[dict]:
+def scrape_university(key: str, skip_names: set = None) -> list[dict]:
     config = UNIVERSITY_CONFIGS[key]
     display_name = config['display_name']
+    skip_names = skip_names or set()
 
     print(f"\n{'='*50}")
     print(f"Scraping {display_name}")
@@ -364,6 +365,9 @@ def scrape_university(key: str) -> list[dict]:
             for source in config.get('phd_sources', [])
             if source.get('type') != 'serper'
         )
+        if person['name'].lower() in skip_names:
+            print(f"  [{i}/{len(all_people)}] [skip] {person['name']}")
+            continue
         print(f"  [{i}/{len(all_people)}] [{person_type}] {person['name']}")
         result = _build_profile(person, display_name, person_type, direct_link=direct)
         enriched.append(result)
@@ -380,11 +384,21 @@ def main():
     parser.add_argument('--out', default=None)
     args = parser.parse_args()
 
-    people = scrape_university(args.university)
-
     out_path = args.out or os.path.join(
         os.path.dirname(__file__), 'data', f'{args.university}.json'
     )
+
+    # Load already-processed people so we can skip them on resume
+    existing = []
+    if os.path.exists(out_path):
+        with open(out_path) as f:
+            existing = json.load(f)
+        print(f"[resume] Found {len(existing)} already processed — will skip them")
+
+    already_done = {p['name'].lower() for p in existing}
+    people = scrape_university(args.university, skip_names=already_done)
+    people = existing + people  # merge old + new
+
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, 'w') as f:
         json.dump(people, f, indent=2)
