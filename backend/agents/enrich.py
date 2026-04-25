@@ -204,16 +204,40 @@ def enrich_professors(professors: list, interests: str, resume_text: str) -> lis
     return enriched
 
 
+def _keyword_overlap_score(prof: dict, interests: str) -> tuple[int, str]:
+    """Deterministic score when Gemini is unavailable (same token idea as discover.py)."""
+    interest_tokens = [
+        w.lower() for w in re.split(r'[\s,;/]+', interests) if len(w) > 2
+    ]
+    if not interest_tokens:
+        return 55, 'Add more specific topic keywords for finer ranking.'
+
+    haystack = ' '.join([
+        prof.get('research_summary', ''),
+        ' '.join(prof.get('research_areas', [])),
+        ' '.join(
+            (p.get('title', '') or '') + ' ' + (p.get('one_line_summary', '') or '')
+            for p in prof.get('papers', [])
+        ),
+    ]).lower()
+    hits = sum(1 for t in interest_tokens if t in haystack)
+    score = max(40, min(88, 42 + hits * 9))
+    if hits:
+        reason = f'{hits} of your topic keywords appear in their research profile and papers.'
+    else:
+        reason = 'Limited direct keyword overlap with your stated interests.'
+    return score, reason
+
+
 def score_professors_from_db(professors: list, interests: str, resume_text: str) -> list:
     """
     Fast path for pre-enriched professors from local DB.
     Papers and research summaries are already stored — only compute match scores.
     No Scholar API calls needed.
     """
-    if not GEMINI_API_KEY:
-        raise ValueError('GEMINI_API_KEY is missing from .env')
-
     scored = []
+    use_gemini = bool(GEMINI_API_KEY)
+
     for prof in professors:
         name = prof.get('name', '')
         university = prof.get('university', '')
@@ -225,9 +249,12 @@ def score_professors_from_db(professors: list, interests: str, resume_text: str)
             for p in papers
         ) or prof.get('research_summary', '')
 
-        try:
-            safe_resume = resume_text[:300] if resume_text else 'not provided'
-            prompt = f"""Researcher: {name} at {university}
+        if not use_gemini:
+            match_score, match_reason = _keyword_overlap_score(prof, interests)
+        else:
+            try:
+                safe_resume = resume_text[:300] if resume_text else 'not provided'
+                prompt = f"""Researcher: {name} at {university}
 Research summary: {prof.get('research_summary', '')}
 Research areas: {', '.join(prof.get('research_areas', []))}
 Recent papers:
@@ -245,19 +272,19 @@ Below 50: Poor match
 Return valid JSON only, no markdown:
 {{"match_score": integer, "match_reason": "one specific sentence explaining the match"}}"""
 
-            text = re.sub(r'```json|```', '', _call_gemini(prompt)).strip()
-            result = json.loads(text)
-            match_score = max(0, min(100, int(result.get('match_score', 50))))
-            match_reason = str(result.get('match_reason', '')).strip()
-        except Exception as e:
-            print(f"[score] FAILED for {name}: {e}")
-            match_score = 50
-            match_reason = 'Potential match based on research profile.'
+                text = re.sub(r'```json|```', '', _call_gemini(prompt)).strip()
+                result = json.loads(text)
+                match_score = max(0, min(100, int(result.get('match_score', 50))))
+                match_reason = str(result.get('match_reason', '')).strip()
+            except Exception as e:
+                print(f"[score] FAILED for {name}: {e}")
+                match_score, match_reason = _keyword_overlap_score(prof, interests)
 
+        url = prof.get('profile_url') or prof.get('url')
         scored.append({
             **prof,
-            'profile_url': prof.get('url'),
-            'personal_website': prof.get('url'),
+            'profile_url': url,
+            'personal_website': url,
             'match_score': match_score,
             'match_reason': match_reason,
         })
