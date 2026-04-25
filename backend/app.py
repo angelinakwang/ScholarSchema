@@ -4,7 +4,7 @@ load_dotenv()
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from agents.discover import find_professors, find_professors_from_db
-from agents.enrich import enrich_professors
+from agents.enrich import enrich_professors, score_professors_from_db
 from agents.email_gen import draft_email
 from db import get_cached_results, save_results
 import pdfplumber
@@ -31,11 +31,13 @@ def search():
         if cached:
             return jsonify({'results': cached, 'from_cache': True})
 
-        # Use local DB if available for this university, else fall back to live search
+        # Use local DB if available — papers already pre-summarized, just score match
         professors = find_professors_from_db(university, interests)
-        if professors is None:
+        if professors is not None:
+            enriched = score_professors_from_db(professors, interests, resume_text)
+        else:
             professors = find_professors(university, interests)
-        enriched = enrich_professors(professors, interests, resume_text)
+            enriched = enrich_professors(professors, interests, resume_text)
 
         # Save to cache
         save_results(university, interests, enriched)
@@ -61,4 +63,5 @@ def generate_email():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Port 5000 is often taken by macOS AirPlay Receiver — use 5001 for local dev.
+    app.run(debug=True, port=5001)

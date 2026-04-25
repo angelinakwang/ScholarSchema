@@ -50,7 +50,12 @@ def find_professors_from_db(university: str, interests: str) -> list | None:
     ]
 
     def _score(prof: dict) -> int:
-        haystack = (prof.get('research_interests', '') + ' ' + prof.get('name', '')).lower()
+        haystack = ' '.join([
+            prof.get('research_summary', ''),
+            ' '.join(prof.get('research_areas', [])),
+            ' '.join(p.get('title', '') + ' ' + p.get('one_line_summary', '') for p in prof.get('papers', [])),
+            prof.get('name', ''),
+        ]).lower()
         return sum(1 for token in interest_tokens if token in haystack)
 
     scored = [(prof, _score(prof)) for prof in professors]
@@ -61,11 +66,8 @@ def find_professors_from_db(university: str, interests: str) -> list | None:
 
     return [
         {
-            'name': p['name'],
-            'url': p['url'],
-            'snippet': p.get('research_interests', ''),
-            'university': p['university'],
-            'email': p.get('email', ''),
+            **p,
+            'snippet': p.get('research_summary', ''),
         }
         for p in top
     ]
