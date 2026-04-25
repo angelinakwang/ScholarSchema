@@ -36,14 +36,16 @@ UNIVERSITY_CONFIGS = {
             'https://www2.eecs.berkeley.edu/Faculty/Lists/EE/faculty.html',
         ],
         'profile_base': 'https://www2.eecs.berkeley.edu',
+        # Only collect links whose href contains this string — much more
+        # precise than name detection when URLs follow a known pattern.
+        'profile_url_pattern': '/Faculty/Homepages/',
     },
     # Template for adding more universities:
     # 'stanford': {
     #     'display_name': 'Stanford University',
-    #     'faculty_list_urls': [
-    #         'https://cs.stanford.edu/people/faculty/',
-    #     ],
-    #     'profile_base': '',
+    #     'faculty_list_urls': ['https://cs.stanford.edu/people/faculty/'],
+    #     'profile_base': 'https://cs.stanford.edu',
+    #     'profile_url_pattern': '/people/',   # set if URLs follow a pattern
     # },
 }
 # ──────────────────────────────────────────────────────────────────────────────
@@ -79,13 +81,16 @@ def _is_person_name(text: str) -> bool:
     return True
 
 
-def _extract_faculty_links(page_url: str, profile_base: str) -> list[dict]:
+def _extract_faculty_links(page_url: str, profile_base: str,
+                           profile_url_pattern: str = '') -> list[dict]:
     """
-    Scrape a faculty listing page and return a list of
-    {'name': str, 'profile_url': str} dicts.
+    Scrape a faculty listing page and return {'name', 'profile_url'} dicts.
 
-    Only follows links whose anchor text IS the professor's name —
-    these are the personal/profile website links on faculty listing pages.
+    If profile_url_pattern is set, only links whose href contains that string
+    are collected — this is precise and fast for universities with predictable
+    URL structures (e.g. Berkeley's /Faculty/Homepages/).
+
+    Falls back to name-text detection when no pattern is configured.
     """
     print(f"\n[list] Fetching {page_url}")
     resp = _get(page_url)
@@ -100,16 +105,22 @@ def _extract_faculty_links(page_url: str, profile_base: str) -> list[dict]:
         href = a['href'].strip()
         name = a.get_text(strip=True)
 
-        if not _is_person_name(name):
-            continue
-
-        # Build absolute URL
+        # Build absolute URL first so we can pattern-match on it
         if href.startswith('http'):
             full_url = href
         elif href.startswith('/'):
             full_url = profile_base.rstrip('/') + href
         else:
             continue
+
+        if profile_url_pattern:
+            # URL-pattern mode: precise, no name guessing needed
+            if profile_url_pattern not in full_url:
+                continue
+        else:
+            # Fallback: accept only links whose text looks like a person name
+            if not _is_person_name(name):
+                continue
 
         if full_url in seen_urls:
             continue
@@ -245,11 +256,13 @@ def scrape_university(key: str) -> list[dict]:
     print(f"Scraping {display_name}")
     print(f"{'='*50}")
 
+    profile_url_pattern = config.get('profile_url_pattern', '')
+
     # Step 1: collect all faculty links from listing pages
     all_faculty = []
     seen_names = set()
     for list_url in config['faculty_list_urls']:
-        for prof in _extract_faculty_links(list_url, profile_base):
+        for prof in _extract_faculty_links(list_url, profile_base, profile_url_pattern):
             if prof['name'].lower() not in seen_names:
                 seen_names.add(prof['name'].lower())
                 all_faculty.append(prof)
