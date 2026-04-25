@@ -223,7 +223,12 @@ def _collect_links(source: dict) -> list[dict]:
 
 def _find_personal_website(soup: BeautifulSoup, directory_url: str) -> str:
     """Find the personal website link on a university directory profile page."""
+    from urllib.parse import urlparse
+
     directory_host = directory_url.split('/')[2]
+    # Extract root domain (e.g. berkeley.edu from www2.eecs.berkeley.edu)
+    root_domain = '.'.join(directory_host.split('.')[-2:])
+
     personal_labels = {
         'home page', 'homepage', 'personal website', 'personal page',
         'website', 'web page', 'webpage', 'personal site', 'faculty page',
@@ -239,15 +244,24 @@ def _find_personal_website(soup: BeautifulSoup, directory_url: str) -> str:
         href = a['href'].strip()
         if not href.startswith('http'):
             continue
-        host = href.split('/')[2]
+
+        parsed = urlparse(href)
+        host = parsed.netloc
+
+        # Skip bare domain homepages (no real path)
+        if not parsed.path or parsed.path == '/':
+            continue
+        # Skip same-domain links (but allow subdomain personal pages like people.eecs.berkeley.edu/~name)
         if host == directory_host:
             continue
         if any(agg in host for agg in aggregator_hosts):
             continue
+
         label = a.get_text(strip=True).lower()
         if label in personal_labels:
             return href
         candidates.append(href)
+
     return candidates[0] if candidates else ''
 
 
