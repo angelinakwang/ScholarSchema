@@ -19,6 +19,10 @@ import time
 import argparse
 import os
 import sys
+from dotenv import load_dotenv
+load_dotenv()
+
+SERPER_API_KEY = os.getenv('SERPER_API_KEY')
 
 # Make sure agents/ is importable when running as a standalone script
 sys.path.insert(0, os.path.dirname(__file__))
@@ -68,11 +72,16 @@ UNIVERSITY_CONFIGS = {
                 'profile_url_pattern': '/Faculty/Homepages/',
             },
         ],
+        # BAIR's student page is JS-rendered — use serper_query instead.
+        # serper_query: searches Google and collects personal-site results.
         'phd_sources': [
             {
-                'url': 'https://bair.berkeley.edu/students.html',
-                'profile_base': 'https://bair.berkeley.edu',
-                'direct_links': True,   # links go straight to personal sites
+                'serper_query': 'site:bair.berkeley.edu/blog/authors PhD student',
+                'type': 'serper',
+            },
+            {
+                'serper_query': 'BAIR Berkeley AI Research PhD student personal website',
+                'type': 'serper',
             },
         ],
     },
@@ -100,6 +109,39 @@ def _get(url: str, timeout: int = 15) -> requests.Response | None:
     except Exception as e:
         print(f"  [warn] GET failed for {url}: {e}")
         return None
+
+
+def _collect_phd_via_serper(query: str) -> list[dict]:
+    """Search Google via Serper and return person-name results as profile stubs."""
+    print(f"\n[serper] Searching for PhD students: {query}")
+    try:
+        resp = requests.post(
+            'https://google.serper.dev/search',
+            headers={'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json'},
+            json={'q': query, 'num': 10},
+            timeout=20,
+        )
+        resp.raise_for_status()
+        results = resp.json().get('organic', [])
+    except Exception as e:
+        print(f"  [serper] FAILED: {e}")
+        return []
+
+    people = []
+    for r in results:
+        raw_name = r.get('title', '').split('|')[0].split('-')[0].strip()
+        url = r.get('link', '')
+        if not raw_name or not url:
+            continue
+        words = raw_name.split()
+        if len(words) < 2 or len(words) > 3:
+            continue
+        if not all(w[0].isupper() for w in words if w):
+            continue
+        people.append({'name': raw_name, 'profile_url': url})
+
+    print(f"  [serper] Found {len(people)} PhD student candidates")
+    return people
 
 
 def _is_person_name(text: str) -> bool:
@@ -135,9 +177,12 @@ def _collect_links(source: dict) -> list[dict]:
     results = []
     seen_urls = set()
 
+    # url -> best name seen so far (pattern mode may encounter the same URL
+    # twice: once with an empty <img>-only link and once with the name as text)
+    url_to_name: dict[str, str] = {}
+
     for a in soup.find_all('a', href=True):
         href = a['href'].strip()
-        name = a.get_text(strip=True)
 
         if href.startswith('http'):
             full_url = href
@@ -149,14 +194,28 @@ def _collect_links(source: dict) -> list[dict]:
         if pattern:
             if pattern not in full_url:
                 continue
+            # Try text, then img alt, then skip
+            name = a.get_text(strip=True)
+            if not name:
+                img = a.find('img')
+                if img and img.get('alt'):
+                    # alt text often includes extra words — trim to first 2-3
+                    alt_words = img['alt'].split()[:3]
+                    name = ' '.join(alt_words)
+            # Keep the longest/best name we've seen for this URL
+            existing = url_to_name.get(full_url, '')
+            if len(name) > len(existing):
+                url_to_name[full_url] = name
         else:
+            name = a.get_text(strip=True)
             if not _is_person_name(name):
                 continue
+            if full_url not in url_to_name:
+                url_to_name[full_url] = name
 
-        if full_url in seen_urls:
-            continue
-        seen_urls.add(full_url)
-        results.append({'name': name, 'profile_url': full_url})
+    for full_url, name in url_to_name.items():
+        if name:
+            results.append({'name': name, 'profile_url': full_url})
 
     print(f"  [list] Found {len(results)} links")
     return results
@@ -288,16 +347,21 @@ def scrape_university(key: str) -> list[dict]:
         _add(_collect_links(source), 'Faculty')
 
     for source in config.get('phd_sources', []):
-        _add(_collect_links(source), 'PhD Student')
+        if source.get('type') == 'serper':
+            _add(_collect_phd_via_serper(source['serper_query']), 'PhD Student')
+        else:
+            _add(_collect_links(source), 'PhD Student')
 
     print(f"\n[scrape] {len(all_people)} unique people to enrich")
 
     enriched = []
     for i, person in enumerate(all_people, 1):
         person_type = person.pop('type')
-        direct = any(
-            source.get('direct_links') and person['profile_url'].startswith(source['url'].rsplit('/', 1)[0])
+        # direct_link: profile_url is already the personal site (no directory hop)
+        direct = person_type == 'PhD Student' and any(
+            source.get('direct_links')
             for source in config.get('phd_sources', [])
+            if source.get('type') != 'serper'
         )
         print(f"  [{i}/{len(all_people)}] [{person_type}] {person['name']}")
         result = _build_profile(person, display_name, person_type, direct_link=direct)
