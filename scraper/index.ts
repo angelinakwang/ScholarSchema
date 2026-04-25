@@ -169,12 +169,16 @@ async function main() {
     console.log(`  -> ${faculty.length} faculty found`);
   }
 
-  // ── Step 2: BAIR PhD students (JS-rendered) ──────────────────────────────────
+  // ── Step 2: BAIR PhD students ────────────────────────────────────────────────
   console.log("\n[list] https://bair.berkeley.edu/students.html");
   await page.goto("https://bair.berkeley.edu/students.html", { waitUntil: "load", timeout: 60000 });
-  await sleep(2000); // let JS render student cards
+  await sleep(2000);
 
-  // BAIR renders student cards — grab any <a> whose text looks like a person name
+  // Dump a snapshot of the page so we can inspect the structure
+  const bairHtml = await page.content();
+  await fs.writeFile(path.join(__dirname, "bair_debug.html"), bairHtml);
+  console.log("  [debug] saved bair_debug.html — open it to inspect the structure");
+
   const bairStudents: { name: string; profileUrl: string }[] = await page.$$eval(
     "a[href]",
     (anchors: HTMLAnchorElement[]) => {
