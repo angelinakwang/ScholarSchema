@@ -59,10 +59,33 @@ def _get(url: str, timeout: int = 15) -> requests.Response | None:
         return None
 
 
+def _is_person_name(text: str) -> bool:
+    """True only if text looks like a first + last name (2-3 capitalized words)."""
+    words = text.strip().split()
+    if len(words) < 2 or len(words) > 3:
+        return False
+    # Every word must start with a capital letter
+    if not all(w[0].isupper() for w in words):
+        return False
+    # No word should be a non-name word
+    non_names = {
+        'faculty', 'research', 'home', 'page', 'lab', 'back', 'next',
+        'more', 'contact', 'all', 'list', 'view', 'here', 'click',
+        'professor', 'department', 'center', 'institute', 'university',
+        'the', 'and', 'for', 'new', 'about',
+    }
+    if any(w.lower() in non_names for w in words):
+        return False
+    return True
+
+
 def _extract_faculty_links(page_url: str, profile_base: str) -> list[dict]:
     """
     Scrape a faculty listing page and return a list of
     {'name': str, 'profile_url': str} dicts.
+
+    Only follows links whose anchor text IS the professor's name —
+    these are the personal/profile website links on faculty listing pages.
     """
     print(f"\n[list] Fetching {page_url}")
     resp = _get(page_url)
@@ -73,30 +96,14 @@ def _extract_faculty_links(page_url: str, profile_base: str) -> list[dict]:
     faculty = []
     seen_urls = set()
 
-    # Most university faculty list pages use <a> tags with the professor's name
-    # as text and a link to their profile. We look for patterns like:
-    #   <a href="/Faculty/Homepages/foo.html">Firstname Lastname</a>
     for a in soup.find_all('a', href=True):
         href = a['href'].strip()
         name = a.get_text(strip=True)
 
-        # Skip empty, navigation, or icon links
-        if not name or len(name) < 4:
+        if not _is_person_name(name):
             continue
 
-        # Name should look like a person (2-4 capitalized words)
-        words = name.split()
-        if len(words) < 2 or len(words) > 5:
-            continue
-        if not words[0][0].isupper():
-            continue
-        # Skip links that are clearly not person names
-        skip_words = ['faculty', 'research', 'home', 'page', 'lab', 'back', 'next',
-                      'more', 'contact', 'all', 'list', 'view', 'here', 'click']
-        if any(w.lower() in skip_words for w in words):
-            continue
-
-        # Build full URL
+        # Build absolute URL
         if href.startswith('http'):
             full_url = href
         elif href.startswith('/'):
