@@ -1,6 +1,5 @@
 import "dotenv/config";
 import { Stagehand } from "@browserbasehq/stagehand";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 import * as fs from "fs/promises";
 import * as path from "path";
@@ -103,12 +102,12 @@ async function main() {
   }
   const alreadyDone = new Set(existing.map((p: any) => p.name.toLowerCase()));
 
-  const google = createGoogleGenerativeAI({ apiKey: GEMINI_API_KEY });
+  // Stagehand's Google provider reads this specific env var name
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY = GEMINI_API_KEY;
 
   const stagehand = new Stagehand({
     env: "LOCAL",
     modelName: "google/gemini-2.0-flash-exp",
-    model: google("gemini-2.0-flash-exp"),
     verbose: 1,
   });
 
@@ -136,7 +135,7 @@ async function main() {
   for (const listUrl of facultyListUrls) {
     console.log(`\n[list] ${listUrl}`);
     await page.goto(listUrl, { waitUntil: "domcontentloaded" });
-    const result = await stagehand.extract({
+    const result = await stagehand.page.extract({
       instruction: "Extract every faculty member's full name and the URL of the link on their name that goes to their department profile page",
       schema: FacultyListSchema,
     });
@@ -147,7 +146,7 @@ async function main() {
   // ── Step 2: collect BAIR PhD students (JS-rendered) ─────────────────────────
   console.log("\n[list] https://bair.berkeley.edu/students.html");
   await page.goto("https://bair.berkeley.edu/students.html", { waitUntil: "networkidle" });
-  const bairResult = await stagehand.extract({
+  const bairResult = await stagehand.page.extract({
     instruction: "Extract every PhD student's full name and the URL of their personal website or profile page",
     schema: StudentListSchema,
   });
@@ -175,7 +174,7 @@ async function main() {
     if (person.type === "Faculty") {
       try {
         await page.goto(person.profileUrl, { waitUntil: "domcontentloaded" });
-        const siteResult = await stagehand.extract({
+        const siteResult = await stagehand.page.extract({
           instruction:
             "Find the URL of this professor's personal or lab website. Skip Google Scholar, LinkedIn, ResearchGate, and bare department homepages (no path after the domain).",
           schema: PersonalSiteSchema,
