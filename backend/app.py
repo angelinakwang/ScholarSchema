@@ -63,4 +63,5 @@ def generate_email():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Port 5000 is often taken by macOS AirPlay Receiver — use 5001 for local dev.
+    app.run(debug=True, port=5001)

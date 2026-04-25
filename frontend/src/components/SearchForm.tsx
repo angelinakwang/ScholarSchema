@@ -5,43 +5,116 @@ interface Props {
   loading: boolean
 }
 
+/** Values must match backend `_UNIVERSITY_DB_KEYS` in agents/discover.py (case-insensitive). */
+const UNIVERSITIES: { value: string; label: string; disabled?: boolean }[] = [
+  { value: '', label: 'Select a university…', disabled: true },
+  { value: 'UC Berkeley', label: 'UC Berkeley' },
+]
+
+const TOPIC_CHIPS = [
+  'machine learning',
+  'computer vision',
+  'NLP',
+  'robotics',
+  'systems',
+  'theory',
+  'HCI',
+  'security',
+  'graphics',
+  'databases',
+  'networking',
+  'architecture',
+] as const
+
 export default function SearchForm({ onSearch, loading }: Props) {
-  const [university, setUniversity] = useState('')
-  const [interests, setInterests] = useState('')
+  const [university, setUniversity] = useState('UC Berkeley')
+  const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set())
+  const [interestsExtra, setInterestsExtra] = useState('')
   const [resume, setResume] = useState<File | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
+  const toggleTopic = (topic: string) => {
+    setSelectedTopics(prev => {
+      const next = new Set(prev)
+      if (next.has(topic)) next.delete(topic)
+      else next.add(topic)
+      return next
+    })
+  }
+
+  const buildInterests = () => {
+    const fromChips = [...selectedTopics].join(' ')
+    const extra = interestsExtra.trim()
+    return [fromChips, extra].filter(Boolean).join(' ').trim()
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!university.trim() || !interests.trim()) return
-    onSearch(university.trim(), interests.trim(), resume)
+    if (!university.trim()) return
+    const interests = buildInterests()
+    if (!interests) return
+    onSearch(university.trim(), interests, resume)
   }
+
+  const interestsReady = buildInterests().length > 0
+  const canSubmit = university.trim() && interestsReady
 
   return (
     <form onSubmit={handleSubmit} style={styles.form}>
-      <div style={styles.row}>
-        <div style={styles.field}>
-          <label style={styles.label}>University</label>
-          <input
-            style={styles.input}
-            type="text"
-            placeholder="e.g. UC Berkeley"
-            value={university}
-            onChange={e => setUniversity(e.target.value)}
-            required
-          />
+      <div style={styles.field}>
+        <label style={styles.label} htmlFor="university-select">
+          University
+        </label>
+        <select
+          id="university-select"
+          style={styles.select}
+          value={university}
+          onChange={e => setUniversity(e.target.value)}
+          required
+        >
+          {UNIVERSITIES.map(opt => (
+            <option key={opt.value || 'placeholder'} value={opt.value} disabled={opt.disabled}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <p style={styles.hint}>Only schools with a local researcher database are listed.</p>
+      </div>
+
+      <div style={styles.field}>
+        <span style={styles.label}>Research topics</span>
+        <p style={styles.subLabel}>Pick one or more areas (optional to combine with text below).</p>
+        <div style={styles.chipRow}>
+          {TOPIC_CHIPS.map(topic => {
+            const on = selectedTopics.has(topic)
+            return (
+              <button
+                key={topic}
+                type="button"
+                onClick={() => toggleTopic(topic)}
+                style={{
+                  ...styles.chip,
+                  ...(on ? styles.chipOn : {}),
+                }}
+              >
+                {topic}
+              </button>
+            )
+          })}
         </div>
       </div>
 
       <div style={styles.field}>
-        <label style={styles.label}>Research Interests</label>
+        <label style={styles.label} htmlFor="interests-extra">
+          Additional keywords <span style={styles.optional}>(optional)</span>
+        </label>
         <textarea
+          id="interests-extra"
           style={{ ...styles.input, ...styles.textarea }}
-          placeholder="e.g. machine learning, computer vision, natural language processing"
-          value={interests}
-          onChange={e => setInterests(e.target.value)}
-          required
-          rows={3}
+          placeholder="e.g. reinforcement learning, fairness, embedded systems"
+          value={interestsExtra}
+          onChange={e => setInterestsExtra(e.target.value)}
+          rows={2}
         />
       </div>
 
@@ -61,7 +134,10 @@ export default function SearchForm({ onSearch, loading }: Props) {
             <button
               type="button"
               style={styles.clearBtn}
-              onClick={() => { setResume(null); if (fileRef.current) fileRef.current.value = '' }}
+              onClick={() => {
+                setResume(null)
+                if (fileRef.current) fileRef.current.value = ''
+              }}
             >
               ✕
             </button>
@@ -76,13 +152,18 @@ export default function SearchForm({ onSearch, loading }: Props) {
         />
       </div>
 
-      <button type="submit" style={styles.submit} disabled={loading}>
+      <button type="submit" style={styles.submit} disabled={loading || !canSubmit}>
         {loading ? (
           <span style={styles.loadingRow}>
             <span style={styles.spinner} /> Finding matches…
           </span>
-        ) : 'Find Researchers'}
+        ) : (
+          'Find Researchers'
+        )}
       </button>
+      {!interestsReady && (
+        <p style={styles.validationHint}>Choose at least one topic or add keywords above.</p>
+      )}
     </form>
   )
 }
@@ -92,11 +173,6 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: '20px',
-  },
-  row: {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '16px',
   },
   field: {
     display: 'flex',
@@ -108,9 +184,59 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     color: '#374151',
   },
+  subLabel: {
+    fontSize: '13px',
+    color: '#6b7280',
+    margin: 0,
+    marginBottom: '4px',
+  },
+  hint: {
+    fontSize: '12px',
+    color: '#9ca3af',
+    margin: 0,
+    marginTop: '2px',
+  },
+  validationHint: {
+    fontSize: '13px',
+    color: '#b45309',
+    margin: '-8px 0 0 0',
+  },
   optional: {
     fontWeight: 400,
     color: '#9ca3af',
+  },
+  select: {
+    padding: '10px 14px',
+    border: '1.5px solid #e5e7eb',
+    borderRadius: '8px',
+    fontSize: '15px',
+    color: '#1a1a2e',
+    background: '#fff',
+    outline: 'none',
+    cursor: 'pointer',
+    width: '100%',
+    maxWidth: '100%',
+  },
+  chipRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+  },
+  chip: {
+    padding: '6px 12px',
+    border: '1.5px solid #e5e7eb',
+    borderRadius: '999px',
+    background: '#fafafa',
+    color: '#4b5563',
+    fontSize: '13px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    transition: 'all 0.12s',
+  },
+  chipOn: {
+    borderColor: '#818cf8',
+    background: '#eef2ff',
+    color: '#4338ca',
   },
   input: {
     padding: '10px 14px',
@@ -125,7 +251,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   textarea: {
     resize: 'vertical',
-    minHeight: '72px',
+    minHeight: '56px',
   },
   fileRow: {
     display: 'flex',
