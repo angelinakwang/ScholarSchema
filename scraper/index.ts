@@ -113,7 +113,7 @@ async function main() {
   });
 
   await stagehand.init();
-  const { page, extract } = stagehand;
+  const { page } = stagehand;
 
   const allPeople: { name: string; profileUrl: string; type: string }[] = [];
   const seenNames = new Set<string>();
@@ -136,7 +136,7 @@ async function main() {
   for (const listUrl of facultyListUrls) {
     console.log(`\n[list] ${listUrl}`);
     await page.goto(listUrl, { waitUntil: "domcontentloaded" });
-    const result = await extract({
+    const result = await stagehand.extract({
       instruction: "Extract every faculty member's full name and the URL of the link on their name that goes to their department profile page",
       schema: FacultyListSchema,
     });
@@ -147,7 +147,7 @@ async function main() {
   // ── Step 2: collect BAIR PhD students (JS-rendered) ─────────────────────────
   console.log("\n[list] https://bair.berkeley.edu/students.html");
   await page.goto("https://bair.berkeley.edu/students.html", { waitUntil: "networkidle" });
-  const bairResult = await extract({
+  const bairResult = await stagehand.extract({
     instruction: "Extract every PhD student's full name and the URL of their personal website or profile page",
     schema: StudentListSchema,
   });
@@ -175,7 +175,7 @@ async function main() {
     if (person.type === "Faculty") {
       try {
         await page.goto(person.profileUrl, { waitUntil: "domcontentloaded" });
-        const siteResult = await extract({
+        const siteResult = await stagehand.extract({
           instruction:
             "Find the URL of this professor's personal or lab website. Skip Google Scholar, LinkedIn, ResearchGate, and bare department homepages (no path after the domain).",
           schema: PersonalSiteSchema,
