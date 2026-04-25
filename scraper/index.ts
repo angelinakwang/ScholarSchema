@@ -170,8 +170,8 @@ async function main() {
   }
 
   // ── Step 2: BAIR PhD students ────────────────────────────────────────────────
-  console.log("\n[list] https://bair.berkeley.edu/students.html");
-  await page.goto("https://bair.berkeley.edu/students.html", { waitUntil: "load", timeout: 60000 });
+  console.log("\n[list] https://bair.berkeley.edu/people/students");
+  await page.goto("https://bair.berkeley.edu/people/students", { waitUntil: "load", timeout: 60000 });
   await sleep(2000);
 
   // Dump a snapshot of the page so we can inspect the structure
