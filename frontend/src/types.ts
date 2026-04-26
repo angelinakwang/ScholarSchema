@@ -8,6 +8,7 @@ export interface Professor {
   name: string
   url: string
   profile_url: string
+  directory_url?: string
   university: string
   type: string
   papers: Paper[]

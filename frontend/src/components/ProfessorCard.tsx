@@ -21,6 +21,7 @@ function scoreBg(score: number): string {
 export default function ProfessorCard({ professor, onEmailClick }: Props) {
   const [expanded, setExpanded] = useState(false)
 
+  const nameUrl = professor.directory_url || professor.profile_url || professor.personal_website || professor.url
   const profileUrl = professor.personal_website || professor.profile_url || professor.url
 
   return (
@@ -29,8 +30,8 @@ export default function ProfessorCard({ professor, onEmailClick }: Props) {
         <div style={styles.nameRow}>
           <div>
             <div style={styles.name}>
-              {profileUrl ? (
-                <a href={profileUrl} target="_blank" rel="noopener noreferrer" style={styles.nameLink}>
+              {nameUrl ? (
+                <a href={nameUrl} target="_blank" rel="noopener noreferrer" style={styles.nameLink}>
                   {professor.name}
                 </a>
               ) : professor.name}
