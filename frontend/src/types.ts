@@ -7,6 +7,7 @@ export interface Paper {
 
 export interface Professor {
   name: string
+  title?: string
   url: string
   profile_url: string
   directory_url?: string

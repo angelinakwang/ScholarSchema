@@ -37,9 +37,8 @@ export default function ProfessorCard({
   const canOpenPapers = (professor.papers?.length ?? 0) > 0
 
   const togglePaper = (title: string) => {
-    const next = selectedPaperTitles.includes(title)
-      ? selectedPaperTitles.filter(t => t !== title)
-      : [...selectedPaperTitles, title]
+    const isSelected = selectedPaperTitles.includes(title)
+    const next = isSelected ? [] : [title]
     onSelectedPaperTitlesChange(next)
   }
 
@@ -74,10 +73,9 @@ export default function ProfessorCard({
                 </a>
               ) : professor.name}
             </div>
-            <div style={styles.subline}>
-              {(professor.research_areas?.[0] || professor.type)} • {professor.university}
-            </div>
+            {professor.title && <div style={styles.subline}>{professor.title}</div>}
             <div style={styles.meta}>
+              <span style={styles.schoolTag}>{professor.university}</span>
               <span style={typeStyle(professor.type)}>{professor.type}</span>
               {nameUrl && (
                 <a href={nameUrl} target="_blank" rel="noopener noreferrer" style={styles.websiteChip} onClick={e => e.stopPropagation()}>
@@ -183,7 +181,19 @@ export default function ProfessorCard({
 }
 
 function typeStyle(type: string): React.CSSProperties {
-  const isPhD = type?.toLowerCase().includes('phd') || type?.toLowerCase().includes('student')
+  const lower = type?.toLowerCase() || ''
+
+  let palette: React.CSSProperties
+  if (lower.includes('phd') || lower.includes('student')) {
+    palette = { background: '#d9e7f2', color: '#4f6776' }
+  } else if (lower.includes('postdoc')) {
+    palette = { background: '#e8d9f2', color: '#6b4f76' }
+  } else if (lower.includes('faculty') || lower.includes('professor')) {
+    palette = { background: '#dae7d8', color: '#5d715d' }
+  } else {
+    palette = { background: '#e7e7da', color: '#6b6b5d' }
+  }
+
   return {
     display: 'inline-block',
     padding: '3px 9px',
@@ -191,8 +201,8 @@ function typeStyle(type: string): React.CSSProperties {
     fontSize: '11px',
     fontWeight: 600,
     letterSpacing: '0',
-    background: isPhD ? '#d9e7f2' : '#dae7d8',
-    color: isPhD ? '#4f6776' : '#5d715d',
+    whiteSpace: 'nowrap',
+    ...palette,
   }
 }
 
@@ -239,6 +249,8 @@ const styles: Record<string, React.CSSProperties> = {
     transition: 'border-color 0.15s, opacity 0.15s',
   },
   titleWrap: {
+    flex: 1,
+    minWidth: 0,
     display: 'flex',
     flexDirection: 'column',
     gap: '4px',
@@ -248,9 +260,19 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#8b99a2',
     fontWeight: 600,
   },
+  schoolTag: {
+    display: 'inline-block',
+    padding: '3px 9px',
+    borderRadius: '99px',
+    fontSize: '11px',
+    fontWeight: 600,
+    letterSpacing: '0',
+    background: '#eef2ff',
+    color: '#4f5f7a',
+  },
   meta: {
     display: 'flex',
-    flexWrap: 'wrap' as const,
+    flexWrap: 'nowrap',
     alignItems: 'center',
     gap: '6px',
     marginTop: '3px',
@@ -263,14 +285,20 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '3px 8px',
     borderRadius: '99px',
     fontWeight: 600,
+    whiteSpace: 'nowrap',
   },
   matchPill: {
+    marginLeft: 'auto',
     flexShrink: 0,
+    maxWidth: '42%',
     padding: '7px 12px',
     borderRadius: '999px',
     textAlign: 'center',
     fontSize: '14px',
     fontWeight: 600,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
   body: {
     padding: '4px 22px 10px',

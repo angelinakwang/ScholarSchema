@@ -1,19 +1,21 @@
-import { useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface Props {
   onSearch: (university: string, interests: string, resume: File | null) => void
   loading: boolean
 }
 
+const FORM_SESSION_KEY = 'search_form_session_v1'
+
 /** Values must match backend `_UNIVERSITY_DB_KEYS` in agents/discover.py (case-insensitive). */
 const UNIVERSITIES: { value: string; label: string; disabled?: boolean; comingSoon?: boolean }[] = [
   { value: '', label: 'Select a university…', disabled: true },
+  { value: 'Stanford', label: 'Stanford' },
   { value: 'UC Berkeley', label: 'UC Berkeley' },
-  { value: 'Stanford', label: 'Stanford (coming soon)', comingSoon: true },
-  { value: 'MIT', label: 'MIT (coming soon)', comingSoon: true },
+  { value: 'UCLA', label: 'UCLA' },
   { value: 'CMU', label: 'Carnegie Mellon (coming soon)', comingSoon: true },
-  { value: 'UCLA', label: 'UCLA (coming soon)', comingSoon: true },
   { value: 'Harvard', label: 'Harvard (coming soon)', comingSoon: true },
+  { value: 'MIT', label: 'MIT (coming soon)', comingSoon: true },
   { value: 'Princeton', label: 'Princeton (coming soon)', comingSoon: true },
 ]
 
@@ -28,17 +30,74 @@ const TOPIC_CHIPS = [
   'security',
   'graphics',
   'databases',
-  'networking',
-  'architecture',
+  'networking'
 ] as const
 
 export default function SearchForm({ onSearch, loading }: Props) {
-  const [university, setUniversity] = useState('UC Berkeley')
+  const [university, setUniversity] = useState('')
   const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set())
+  const [hoveredTopic, setHoveredTopic] = useState<string | null>(null)
   const [interestsExtra, setInterestsExtra] = useState('')
+  const [animatedPlaceholder, setAnimatedPlaceholder] = useState('')
   const [resume, setResume] = useState<File | null>(null)
   const [dbStatusMsg, setDbStatusMsg] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(FORM_SESSION_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as {
+        university?: string
+        selectedTopics?: string[]
+        interestsExtra?: string
+      }
+      setUniversity(parsed.university ?? '')
+      setSelectedTopics(new Set(parsed.selectedTopics ?? []))
+      setInterestsExtra(parsed.interestsExtra ?? '')
+    } catch {
+      sessionStorage.removeItem(FORM_SESSION_KEY)
+    }
+  }, [])
+
+  useEffect(() => {
+    const payload = {
+      university,
+      selectedTopics: [...selectedTopics],
+      interestsExtra,
+    }
+    sessionStorage.setItem(FORM_SESSION_KEY, JSON.stringify(payload))
+  }, [university, selectedTopics, interestsExtra])
+
+  useEffect(() => {
+    const samples = [
+      'reinforcement learning, fairness, embedded systems',
+      'cancer genomics, bioinformatics, computational biology',
+      'climate science, energy systems, public policy',
+    ]
+    let sampleIdx = 0
+    let charIdx = 0
+    let deleting = false
+
+    const tick = () => {
+      const current = samples[sampleIdx]
+      if (!deleting) {
+        charIdx = Math.min(current.length, charIdx + 1)
+        setAnimatedPlaceholder(current.slice(0, charIdx))
+        if (charIdx === current.length) deleting = true
+      } else {
+        charIdx = Math.max(0, charIdx - 1)
+        setAnimatedPlaceholder(current.slice(0, charIdx))
+        if (charIdx === 0) {
+          deleting = false
+          sampleIdx = (sampleIdx + 1) % samples.length
+        }
+      }
+    }
+
+    const timer = window.setInterval(tick, 70)
+    return () => window.clearInterval(timer)
+  }, [])
 
   const toggleTopic = (topic: string) => {
     setSelectedTopics(prev => {
@@ -64,19 +123,30 @@ export default function SearchForm({ onSearch, loading }: Props) {
       return
     }
     const interests = buildInterests()
-    if (!interests) return
+    if (!interests && !resume) return
     setDbStatusMsg('')
     onSearch(university.trim(), interests, resume)
   }
 
+  const handleFindAllResearchers = () => {
+    if (!university.trim()) return
+    const selected = UNIVERSITIES.find(u => u.value === university.trim())
+    if (selected?.comingSoon) {
+      setDbStatusMsg(`The ${selected.value} database isn't up yet. Please use UC Berkeley for now.`)
+      return
+    }
+    setDbStatusMsg('')
+    onSearch(university.trim(), '', resume)
+  }
+
   const interestsReady = buildInterests().length > 0
-  const canSubmit = university.trim() && interestsReady
+  const canSubmit = Boolean(university.trim() && (interestsReady || resume))
 
   return (
     <form onSubmit={handleSubmit} style={styles.form}>
       <div style={styles.field}>
         <label style={styles.label} htmlFor="university-select">
-          University
+          Select your university
         </label>
         <select
           id="university-select"
@@ -104,10 +174,13 @@ export default function SearchForm({ onSearch, loading }: Props) {
         <div style={styles.chipRow}>
           {TOPIC_CHIPS.map(topic => {
             const on = selectedTopics.has(topic)
+            const hovered = hoveredTopic === topic
             return (
               <button
                 key={topic}
                 type="button"
+                onMouseEnter={() => setHoveredTopic(topic)}
+                onMouseLeave={() => setHoveredTopic(null)}
                 onMouseDown={e => e.preventDefault()}
                 onClick={e => {
                   toggleTopic(topic)
@@ -116,6 +189,7 @@ export default function SearchForm({ onSearch, loading }: Props) {
                 style={{
                   ...styles.chip,
                   ...(on ? styles.chipOn : {}),
+                  ...(!on && hovered ? styles.chipHover : {}),
                 }}
               >
                 {topic}
@@ -132,7 +206,7 @@ export default function SearchForm({ onSearch, loading }: Props) {
         <textarea
           id="interests-extra"
           style={{ ...styles.input, ...styles.textarea }}
-          placeholder="e.g. reinforcement learning, fairness, embedded systems"
+          placeholder={`e.g. ${animatedPlaceholder}`}
           value={interestsExtra}
           onChange={e => setInterestsExtra(e.target.value)}
           rows={2}
@@ -182,8 +256,16 @@ export default function SearchForm({ onSearch, loading }: Props) {
           'Find Researchers'
         )}
       </button>
-      {!interestsReady && (
-        <p style={styles.validationHint}>Choose at least one topic or add keywords above.</p>
+      <button
+        type="button"
+        style={styles.allBtn}
+        disabled={loading || !university.trim()}
+        onClick={handleFindAllResearchers}
+      >
+        All researchers from this school
+      </button>
+      {!interestsReady && !resume && (
+        <p style={styles.validationHint}>Choose at least one topic/add keywords, or upload a resume.</p>
       )}
     </form>
   )
@@ -237,6 +319,10 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     width: '100%',
     maxWidth: '100%',
+    appearance: 'none',
+    WebkitAppearance: 'none',
+    MozAppearance: 'none',
+    backgroundImage: 'none',
   },
   chipRow: {
     display: 'flex',
@@ -246,6 +332,7 @@ const styles: Record<string, React.CSSProperties> = {
   chip: {
     padding: '6px 12px',
     border: '1.5px solid #d7deda',
+    borderColor: '#d7deda',
     borderRadius: '999px',
     background: '#fcfcfa',
     color: '#667176',
@@ -255,11 +342,19 @@ const styles: Record<string, React.CSSProperties> = {
     transition: 'all 0.12s',
     outline: 'none',
     boxShadow: 'none',
+    WebkitTapHighlightColor: 'transparent',
   },
   chipOn: {
+    border: '1.5px solid #90a9b8',
     borderColor: '#90a9b8',
     background: '#edf3f6',
     color: '#4f6776',
+  },
+  chipHover: {
+    borderColor: '#b8c9cf',
+    background: '#f4f8f9',
+    color: '#5f7178',
+    transform: 'translateY(-1px)',
   },
   input: {
     padding: '12px 16px',
@@ -318,6 +413,19 @@ const styles: Record<string, React.CSSProperties> = {
     transition: 'opacity 0.15s, transform 0.1s',
     alignSelf: 'stretch',
   },
+  allBtn: {
+    width: '100%',
+    padding: '11px 18px',
+    background: '#f0f5f2',
+    border: '1.5px solid #c7d4cf',
+    borderRadius: '999px',
+    color: '#5f6a6f',
+    fontSize: '14px',
+    fontWeight: 600,
+    letterSpacing: '0.01em',
+    transition: 'opacity 0.15s, transform 0.1s',
+    alignSelf: 'stretch',
+  },
   loadingRow: {
     display: 'flex',
     alignItems: 'center',
@@ -333,3 +441,5 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'inline-block',
   },
 }
+
+

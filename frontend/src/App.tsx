@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Professor } from './types'
 import { searchProfessors } from './api'
 import SearchForm from './components/SearchForm'
@@ -6,6 +6,8 @@ import ProfessorCard from './components/ProfessorCard'
 import EmailModal from './components/EmailModal'
 
 const SAVED_PROFESSOR_KEY = 'saved_professors_v1'
+const SEARCH_SESSION_KEY = 'search_session_v1'
+const LOGO_SRC = '/logo.png'
 function professorKey(prof: Professor): string {
   return `${prof.university}::${prof.name}`.toLowerCase()
 }
@@ -31,6 +33,44 @@ export default function App() {
   const [resumeText, setResumeText] = useState('')
   const [resumeFileName, setResumeFileName] = useState('')
   const [paperSelections, setPaperSelections] = useState<Record<string, string[]>>({})
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(SEARCH_SESSION_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as {
+        results?: Professor[]
+        fromCache?: boolean
+        searched?: boolean
+        showSavedOnly?: boolean
+        resumeText?: string
+        resumeFileName?: string
+        paperSelections?: Record<string, string[]>
+      }
+      setResults(parsed.results ?? [])
+      setFromCache(Boolean(parsed.fromCache))
+      setSearched(Boolean(parsed.searched))
+      setShowSavedOnly(Boolean(parsed.showSavedOnly))
+      setResumeText(parsed.resumeText ?? '')
+      setResumeFileName(parsed.resumeFileName ?? '')
+      setPaperSelections(parsed.paperSelections ?? {})
+    } catch {
+      sessionStorage.removeItem(SEARCH_SESSION_KEY)
+    }
+  }, [])
+
+  useEffect(() => {
+    const payload = {
+      results,
+      fromCache,
+      searched,
+      showSavedOnly,
+      resumeText,
+      resumeFileName,
+      paperSelections,
+    }
+    sessionStorage.setItem(SEARCH_SESSION_KEY, JSON.stringify(payload))
+  }, [results, fromCache, searched, showSavedOnly, resumeText, resumeFileName, paperSelections])
 
   const toggleSaved = (prof: Professor) => {
     const key = professorKey(prof)
@@ -93,8 +133,22 @@ export default function App() {
     <div style={styles.page}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
         a:hover { opacity: 0.8; }
-        button:hover:not(:disabled) { opacity: 0.88; }
+        button:hover:not(:disabled) {
+          opacity: 0.94;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 14px rgba(79, 103, 118, 0.18);
+        }
         button:disabled { opacity: 0.6; cursor: not-allowed; }
         button {
           appearance: none;
@@ -106,15 +160,14 @@ export default function App() {
         button:active {
           outline: none !important;
           box-shadow: none !important;
-          border-color: inherit;
         }
       `}</style>
 
       <header style={styles.header}>
         <div style={styles.headerInner}>
           <div style={styles.logo}>
-            <span style={styles.logoIcon}>⬡</span>
-            <span style={styles.logoText}>ResearchMatch</span>
+            <img src={LOGO_SRC} alt="ScholarSchema logo" style={styles.logoImage} />
+            <span style={styles.logoText}>ScholarSchema</span>
           </div>
           <div style={styles.tagline}>Find researchers who match your interests — and reach out in seconds</div>
         </div>
@@ -206,36 +259,70 @@ const styles: Record<string, React.CSSProperties> = {
   },
   header: {
     background: 'transparent',
-    padding: '54px 24px 24px',
+    padding: '42px 24px 18px',
   },
   headerInner: {
     maxWidth: '960px',
     margin: '0 auto',
+    animation: 'fadeDown 320ms ease-out',
+  },
+  scrollWrap: {
+    position: 'relative',
     textAlign: 'center',
+    padding: '28px 28px 26px',
+    borderRadius: '22px',
+    background: 'linear-gradient(180deg, #f7f1de 0%, #efe5cf 100%)',
+    border: '1px solid #deceb2',
+    boxShadow: '0 10px 24px rgba(107, 93, 70, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.55)',
+  },
+  scrollRollLeft: {
+    position: 'absolute',
+    top: '-14px',
+    left: '22px',
+    width: '54px',
+    height: '26px',
+    borderRadius: '999px',
+    background: 'linear-gradient(180deg, #e8d8b8 0%, #d8c39a 100%)',
+    border: '1px solid #ccb187',
+    boxShadow: '0 3px 8px rgba(95, 75, 44, 0.2)',
+  },
+  scrollRollRight: {
+    position: 'absolute',
+    top: '-14px',
+    right: '22px',
+    width: '54px',
+    height: '26px',
+    borderRadius: '999px',
+    background: 'linear-gradient(180deg, #e8d8b8 0%, #d8c39a 100%)',
+    border: '1px solid #ccb187',
+    boxShadow: '0 3px 8px rgba(95, 75, 44, 0.2)',
   },
   logo: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '10px',
-    marginBottom: '12px',
+    gap: '12px',
+    marginBottom: '10px',
   },
-  logoIcon: {
-    fontSize: '40px',
-    color: '#b8c8c0',
+  logoImage: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '12px',
+    objectFit: 'cover',
   },
   logoText: {
     fontSize: 'clamp(2.1rem, 6vw, 3.1rem)',
     fontWeight: 800,
-    color: '#4b5563',
+    color: '#3f5567',
     letterSpacing: '-0.02em',
   },
   tagline: {
     fontSize: 'clamp(1rem, 2.4vw, 1.2rem)',
-    color: '#6b7280',
-    maxWidth: '560px',
+    color: '#6f6552',
+    maxWidth: '620px',
     margin: '0 auto',
     lineHeight: 1.55,
+    textAlign: 'center',
   },
   main: {
     maxWidth: 'min(1160px, 100%)',
@@ -250,6 +337,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 'clamp(22px, 3vw, 36px) clamp(10px, 2vw, 18px)',
     marginTop: '0',
     boxShadow: 'none',
+    animation: 'fadeDown 420ms ease-out',
   },
   loadingState: {
     display: 'flex',

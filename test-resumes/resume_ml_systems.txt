@@ -1,0 +1,36 @@
+Alex Kim
+Email: alex.kim@example.com | Phone: (555) 010-1122
+LinkedIn: linkedin.com/in/alexkim | GitHub: github.com/alexkim
+
+EDUCATION
+B.S. Computer Engineering, State University, 2026
+Relevant coursework: Machine Learning, Operating Systems, Distributed Systems, Computer Architecture
+
+RESEARCH INTERESTS
+Large language models, model optimization, distributed training, ML systems, inference acceleration
+
+RESEARCH EXPERIENCE
+Undergraduate Research Assistant, Efficient AI Lab (2024-Present)
+- Built a distributed data loading pipeline for multi-GPU pretraining jobs in PyTorch.
+- Implemented mixed precision training and gradient checkpointing to reduce memory usage by 28%.
+- Profiled transformer inference latency and proposed kernel-level optimizations for attention blocks.
+
+Software Engineering Intern, Cloud AI Infrastructure Team (Summer 2025)
+- Developed monitoring dashboards for GPU utilization, throughput, and queue latency.
+- Added autoscaling heuristics for model serving endpoints using Kubernetes and Prometheus.
+- Improved p95 request latency by 18% for a text generation microservice.
+
+PROJECTS
+EdgeLLM Quantization Toolkit
+- Implemented 8-bit and 4-bit quantization pipeline for transformer models.
+- Benchmarked latency/quality tradeoffs across CPU and GPU serving backends.
+
+Distributed Retrieval-Augmented Generation
+- Built vector indexing + retrieval stack with FAISS and hybrid lexical retrieval.
+- Evaluated answer faithfulness and retrieval recall on internal QA datasets.
+
+SKILLS
+Python, C++, PyTorch, CUDA basics, Kubernetes, Docker, Linux, SQL, Prometheus, Git
+
+PUBLICATIONS
+Kim, A. et al. "Latency-Aware Inference Optimization for Transformer Serving." Student Research Symposium, 2025.

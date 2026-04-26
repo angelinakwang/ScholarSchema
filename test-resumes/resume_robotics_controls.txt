@@ -1,0 +1,36 @@
+Daniel Ortiz
+Email: daniel.ortiz@example.com | Phone: (555) 010-7704
+Website: danielortiz.dev | GitHub: github.com/dortiz
+
+EDUCATION
+B.S. Mechanical Engineering, North Bay Institute of Technology, 2026
+Relevant coursework: Robotics, Control Systems, State Estimation, Embedded Systems
+
+RESEARCH INTERESTS
+Robot learning, control theory, motion planning, reinforcement learning for manipulation
+
+RESEARCH EXPERIENCE
+Undergraduate Researcher, Autonomous Systems Lab (2024-Present)
+- Implemented model predictive control for quadrotor trajectory tracking in simulation.
+- Integrated visual-inertial odometry and EKF-based state estimation stack.
+- Evaluated robust controllers under sensor noise and external disturbances.
+
+Controls Engineering Intern, Industrial Robotics Team (Summer 2025)
+- Tuned PID and LQR controllers for collaborative robot arm tasks.
+- Built safety interlock logic and telemetry pipeline for real-time diagnostics.
+- Reduced settling time by 22% for pick-and-place trajectories.
+
+PROJECTS
+RL for Contact-Rich Manipulation
+- Trained proximal policy optimization agents for peg-in-hole and insertion tasks.
+- Compared reward shaping strategies and domain randomization settings.
+
+Multi-Robot Path Planning
+- Implemented prioritized planning and conflict-based search in ROS2.
+- Simulated warehouse navigation with dynamic obstacle avoidance.
+
+SKILLS
+Python, C++, ROS2, MATLAB, MuJoCo, PyTorch, Linux, Git, embedded C
+
+PUBLICATIONS
+Ortiz, D. et al. "Robust Trajectory Tracking with Hybrid MPC-Learning Controllers." Student Robotics Conference, 2025.

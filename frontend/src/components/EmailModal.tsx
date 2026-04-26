@@ -25,9 +25,10 @@ export default function EmailModal({
   onClose,
 }: Props) {
   const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [hasGenerated, setHasGenerated] = useState(false)
 
   const selectedPapers = (professor.papers || []).filter(
     p => selectedPaperTitles.includes(p.title)
@@ -43,26 +44,10 @@ export default function EmailModal({
   }
 
   useEffect(() => {
-    const key = draftStorageKey(professor)
-    const savedDraft = localStorage.getItem(key)
-    if (savedDraft) {
-      setEmail(savedDraft)
-      setLoading(false)
-      return
-    }
-
-    requestDraft(true)
-      .then(text => setEmail(text))
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [professor, resumeText])
-
-  useEffect(() => {
-    if (loading || error) return
+    if (!hasGenerated || loading || error) return
     const key = draftStorageKey(professor)
     localStorage.setItem(key, email)
-  }, [email, loading, error, professor])
+  }, [email, hasGenerated, loading, error, professor])
 
   const handleCopy = () => {
     navigator.clipboard.writeText(email).then(() => {
@@ -72,9 +57,8 @@ export default function EmailModal({
   }
 
   const togglePaper = (title: string) => {
-    const next = selectedPaperTitles.includes(title)
-      ? selectedPaperTitles.filter(t => t !== title)
-      : [...selectedPaperTitles, title]
+    const isSelected = selectedPaperTitles.includes(title)
+    const next = isSelected ? [] : [title]
     onSelectedPaperTitlesChange(next)
   }
 
@@ -84,6 +68,7 @@ export default function EmailModal({
     try {
       const nextEmail = await requestDraft(true)
       setEmail(nextEmail)
+      setHasGenerated(true)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to regenerate email')
     } finally {
@@ -113,10 +98,10 @@ export default function EmailModal({
           <div style={styles.error}>{error}</div>
         )}
 
-        {!loading && !error && (
+        {!error && (
           <>
             <div style={styles.paperPicker}>
-              <div style={styles.paperPickerTitle}>Highlight papers to mention in your email:</div>
+              <div style={styles.paperPickerTitle}>Select one paper to mention in your email:</div>
               {professor.papers?.length > 0 ? (
                 <>
                   <div style={styles.paperPickerList}>
@@ -132,7 +117,7 @@ export default function EmailModal({
                     ))}
                   </div>
                   <button type="button" style={styles.regenBtn} onClick={handleRegenerate} disabled={loading}>
-                    Regenerate with selected papers
+                    {hasGenerated ? 'Regenerate with selected paper' : 'Generate email'}
                   </button>
                 </>
               ) : (
@@ -141,30 +126,34 @@ export default function EmailModal({
                 </div>
               )}
             </div>
-            <textarea
-              style={styles.emailArea}
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              rows={18}
-            />
-            {resumeFileName && (
-              <div style={styles.resumeHint}>
-                Resume uploaded: <strong>{resumeFileName}</strong>. Please attach it manually in your email client.
-              </div>
+            {hasGenerated && !loading && (
+              <>
+                <textarea
+                  style={styles.emailArea}
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  rows={18}
+                />
+                {resumeFileName && (
+                  <div style={styles.resumeHint}>
+                    Resume uploaded: <strong>{resumeFileName}</strong>. Please attach it manually in your email client.
+                  </div>
+                )}
+                <div style={styles.footer}>
+                  <button style={styles.copyBtn} onClick={handleCopy}>
+                    {copied ? '✓ Copied!' : 'Copy to Clipboard'}
+                  </button>
+                  {professor.email && (
+                    <a
+                      href={`mailto:${professor.email}?subject=Research Interest&body=${encodeURIComponent(email)}`}
+                      style={styles.mailtoBtn}
+                    >
+                      {resumeFileName ? 'Open in Mail (attach resume)' : 'Open in Mail'}
+                    </a>
+                  )}
+                </div>
+              </>
             )}
-            <div style={styles.footer}>
-              <button style={styles.copyBtn} onClick={handleCopy}>
-                {copied ? '✓ Copied!' : 'Copy to Clipboard'}
-              </button>
-              {professor.email && (
-                <a
-                  href={`mailto:${professor.email}?subject=Research Interest&body=${encodeURIComponent(email)}`}
-                  style={styles.mailtoBtn}
-                >
-                  {resumeFileName ? 'Open in Mail (attach resume)' : 'Open in Mail'}
-                </a>
-              )}
-            </div>
           </>
         )}
       </div>

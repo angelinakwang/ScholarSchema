@@ -1,0 +1,37 @@
+Priya Shah
+Email: priya.shah@example.com | Phone: (555) 010-3381
+Portfolio: priyashah.dev | GitHub: github.com/priyashah
+
+EDUCATION
+B.S. Bioengineering, Westlake University, 2026
+Minor: Data Science
+Relevant coursework: Genomics, Computational Biology, Statistical Learning, Databases
+
+RESEARCH INTERESTS
+Computational biology, cancer genomics, biomedical NLP, graph learning for biological networks
+
+RESEARCH EXPERIENCE
+Research Intern, Computational Genomics Group (2024-Present)
+- Built pipelines for RNA-seq and whole exome variant annotation.
+- Applied clustering and dimensionality reduction for tumor subtype characterization.
+- Trained gradient boosting models for mutation pathogenicity prediction.
+
+Data Science Intern, Precision Medicine Startup (Summer 2025)
+- Built ETL workflows for multi-modal clinical + omics datasets.
+- Implemented feature engineering and model validation for response prediction tasks.
+- Improved AUROC from 0.71 to 0.79 on held-out patient cohorts.
+
+PROJECTS
+Clinical Note Entity Extraction
+- Fine-tuned biomedical language models for medication and diagnosis extraction.
+- Developed weak supervision rules and active learning loop for annotation efficiency.
+
+Pathway Graph Neural Network
+- Modeled protein-protein interaction graph for pathway activity prediction.
+- Added explainability features to highlight biologically relevant nodes.
+
+SKILLS
+Python, R, PyTorch, scikit-learn, pandas, BioPython, SQL, Snakemake, Docker, Git
+
+PUBLICATIONS
+Shah, P. et al. "Multi-Modal Modeling for Variant Prioritization in Rare Disease Cohorts." Undergraduate Bioinformatics Workshop, 2025.
