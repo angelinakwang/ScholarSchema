@@ -56,6 +56,203 @@
         "one_line_summary": "Investigates how large language models can be fine-tuned on clinical notes and biomedical literature to extract structured medical knowledge automatically. Proposes domain-adaptive pretraining strategies that improve performance on tasks like diagnosis coding and adverse drug event detection."
       }
     ]
-  }
+  },
+    {
+      "name": "Miryung Kim",
+      "title": "Professor, Vice Chair of Graduate Studies",
+      "department": "Computer Science",
+      "type": "Faculty",
+      "url": "https://web.cs.ucla.edu/~miryung/index.html",
+      "profile_url": "https://web.cs.ucla.edu/~miryung/index.html",
+      "email": "miryung@cs.ucla.edu",
+      "university": "UCLA",
+      "interests": [
+        "software engineering",
+        "data-intensive computing",
+        "developer tools",
+        "Apache Spark",
+        "debugging",
+        "testing",
+        "program analysis",
+        "code clones",
+        "AI-driven developer tools",
+        "machine learning systems"
+      ],
+      "research_summary": "Focuses on software engineering for data-intensive systems, building debugging, testing, and analysis tools for large-scale platforms like Apache Spark. Her work studies software evolution through code clones and data-driven analytics, and helped define the role of data scientists in software teams, with impact on modern AI-assisted development tools.",
+      "papers": [
+        {
+          "title": "WhyFlow: Interrogative Debugger for Sensemaking Taint Analysis",
+          "year": "2026",
+          "one_line_summary": "Introduces a debugging system that helps developers understand how data flows through complex programs by allowing them to ask structured 'why' questions, improving reasoning about taint analysis in large-scale systems."
+        },
+        {
+          "title": "Change and Cover: Last-Mile, Pull Request-based Regression Test Augmentation",
+          "year": "2026",
+          "one_line_summary": "Presents a method that uses code changes in pull requests to automatically generate additional regression tests, improving software reliability by targeting uncovered or weakly tested modifications."
+        },
+        {
+          "title": "Fuzzing MLIR Compilers with Custom Mutation Synthesis",
+          "year": "2025",
+          "one_line_summary": "Develops a fuzz testing approach tailored for modern compiler infrastructures like MLIR, generating targeted mutations to uncover bugs in complex compiler pipelines used in machine learning systems."
+        }
+      ]
+    }, 
+    {
+      "name": "Songwu Lu",
+      "title": "Professor",
+      "department": "Computer Science",
+      "type": "Faculty",
+      "url": "https://web.cs.ucla.edu/~slu/",
+      "profile_url": "https://web.cs.ucla.edu/~slu/",
+      "email": "slu@cs.ucla.edu",
+      "university": "UCLA",
+      "interests": [
+        "wireless networking",
+        "mobile systems",
+        "cloud computing",
+        "network security",
+        "Internet security",
+        "5G networks",
+        "cellular systems",
+        "network protocols",
+        "mobile network analytics"
+      ],
+      "research_summary": "Leads the WiNG Lab at UCLA, focusing on wireless networking and mobile systems, including 4G/5G cellular networks. His work develops scalable, low-latency, and secure network systems, with contributions to mobile analytics, protocol design, and cloud-assisted wireless infrastructure.",
+      "papers": [
+        {
+          "title": "MobileInsight: Extracting and Analyzing Cellular Network Information on Smartphones",
+          "year": "2016",
+          "one_line_summary": "Introduces a system that enables fine-grained analysis of cellular network protocols directly on smartphones, providing unprecedented visibility into mobile network performance and behavior."
+        },
+        {
+          "title": "cniCloud: Querying Fine-Grained Cellular Network Information at Scale",
+          "year": "2017",
+          "one_line_summary": "Presents a cloud-based platform that aggregates and queries large-scale cellular network data collected from mobile devices, enabling data-driven insights into network performance and optimization."
+        },
+        {
+          "title": "iCellular: Device-Customized Cellular Network Access on Commodity Smartphones",
+          "year": "2018",
+          "one_line_summary": "Proposes a system that allows smartphones to intelligently select and switch between cellular networks, improving connectivity, performance, and user experience."
+        }
+      ]
+    },
+    {
+        "name": "Todd Millstein",
+        "title": "Professor",
+        "department": "Computer Science",
+        "type": "Faculty",
+        "url": "https://web.cs.ucla.edu/~todd/",
+        "profile_url": "https://web.cs.ucla.edu/~todd/",
+        "email": "todd@cs.ucla.edu",
+        "university": "UCLA",
+        "interests": [
+          "software reliability",
+          "programming languages",
+          "network verification",
+          "network security",
+          "probabilistic programming",
+          "program verification",
+          "static analysis",
+          "distributed systems reliability"
+        ],
+        "research_summary": "Focuses on software reliability using programming languages techniques, with major work in network verification and security. He develops tools like Batfish for analyzing and preventing network failures in large-scale systems used in industry. His research also spans program verification, probabilistic programming, and automated reasoning, aiming to make complex software and network systems more reliable and easier to verify.",
+        "papers": [
+          {
+            "title": "Tackling Ambiguity in User Intent for LLM-based Network Configuration Synthesis",
+            "year": "2025",
+            "one_line_summary": "Explores how large language models can be used to generate network configurations from natural language while handling ambiguity in user intent to improve correctness and reliability."
+          },
+          {
+            "title": "Tuning Random Generators: Property-Based Testing as Probabilistic Programming",
+            "year": "2025",
+            "one_line_summary": "Connects property-based testing with probabilistic programming by modeling test input generation as a tunable probabilistic process for more effective software testing."
+          },
+          {
+            "title": "Synthesizing Implication Lemmas for Interactive Theorem Proving",
+            "year": "2025",
+            "one_line_summary": "Introduces techniques to automatically generate useful intermediate lemmas to assist users in interactive theorem proving and reduce manual proof effort."
+          }
+        ]
+      },
+      {
+        "name": "Chenchen Ye",
+        "title": "PhD Student, Scalable Analytics Institute",
+        "department": "Computer Science",
+        "type": "Student",
+        "url": "https://yecchen.github.io/",
+        "profile_url": "https://yecchen.github.io/",
+        "email": "ccye@cs.ucla.edu",
+        "university": "UCLA",
+        "interests": [
+          "large language models",
+          "LLM agents",
+          "agentic reasoning",
+          "natural language processing",
+          "machine learning",
+          "software engineering agents",
+          "graph neural networks",
+          "knowledge graphs",
+          "multimodal learning",
+          "AI evaluation"
+        ],
+        "research_summary": "PhD student at UCLA working on machine learning and NLP with a focus on LLM agents for complex real-world tasks such as software engineering. His research explores agentic reasoning, post-training methods, and evaluation of LLM systems, along with integrating heterogeneous knowledge sources such as text, code, graphs, and visual data to improve model robustness and interpretability.",
+        "papers": [
+          {
+            "title": "Self-Verifying Software Engineering Agents through Discriminative Test Generation",
+            "year": "2026",
+            "one_line_summary": "Proposes LLM-based software engineering agents that improve reliability by generating and using discriminative tests to self-verify outputs and reduce hallucinations in code-related tasks."
+          },
+          {
+            "title": "Training Recipes for Agentic Reinforcement Learning in LLMs: A Survey",
+            "year": "2026",
+            "one_line_summary": "Surveys reinforcement learning approaches for training LLM agents, focusing on techniques that improve planning, reasoning, and decision-making in complex environments."
+          },
+          {
+            "title": "GraphVis: Boosting LLMs with Visual Knowledge Graph Integration",
+            "year": "2024",
+            "one_line_summary": "Introduces a method for integrating visual knowledge graphs into LLM pipelines to improve reasoning and understanding over structured relational data."
+          }
+        ]
+      },
+      {
+        "name": "Serina Chang",
+        "title": "Assistant Professor",
+        "department": "EECS and Computational Precision Health",
+        "type": "Faculty",
+        "url": "https://serinachang5.github.io/",
+        "profile_url": "https://serinachang5.github.io/",
+        "email": "serinac@berkeley.edu",
+        "university": "UC Berkeley",
+        "interests": [
+          "AI and human behavior",
+          "human-AI interaction",
+          "large language models",
+          "computational social science",
+          "public health AI",
+          "behavior modeling",
+          "graph learning",
+          "AI evaluation",
+          "social networks",
+          "decision-making systems"
+        ],
+        "research_summary": "Focuses on AI and human behavior, building models that simulate and understand human actions using machine learning and large language models. Her work develops methods for human-AI interaction, behavioral simulation, and data-driven decision-making, with applications in public health, social systems, and policy. She also studies how AI can model populations, infer real-world behaviors from large-scale data, and support high-stakes societal decisions.",
+        "papers": [
+          {
+            "title": "What do large language models know about opinions?",
+            "year": "2026",
+            "one_line_summary": "Investigates how much LLMs understand human opinions and proposes methods to steer model outputs toward different population perspectives using interpretability techniques."
+          },
+          {
+            "title": "Graph-based alternatives to LLMs for human simulation",
+            "year": "2026",
+            "one_line_summary": "Explores graph-based models as efficient and interpretable alternatives to LLMs for simulating human behavior in structured tasks."
+          },
+          {
+            "title": "ChatBench: from static benchmarks to human-AI evaluation",
+            "year": "2025",
+            "one_line_summary": "Introduces a framework that transforms static benchmarks into interactive human-AI evaluation environments to better measure real-world model performance."
+          }
+        ]
+      }
 
 ]
