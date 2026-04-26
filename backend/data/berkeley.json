@@ -7,7 +7,7 @@
       "type": "Faculty",
       "papers": [
         {
-          "title": "OPTIMIZING EXPECTATIONS: FROM DEEP REINFORCEMENT LEARNING TO STOCHASTIC COMPUTATION GRAPHS",
+          "title": "Optimizing Expectations: From Deep Reinforcement Learning to Stochastic Computation Graphs",
           "year": null,
           "one_line_summary": "Explores methods for optimizing expectations, linking deep reinforcement learning with stochastic computation graphs."
         },
@@ -41,49 +41,6 @@
         "Robotic Manipulation"
       ],
       "email": "pabbeel@cs.berkeley.edu"
-    },
-    {
-      "name": "Ahmed Alaa",
-      "url": "https://eecs.berkeley.edu/resources/students/",
-      "directory_url": "https://www2.eecs.berkeley.edu/Faculty/Homepages/amalaa.html",
-      "university": "UC Berkeley",
-      "type": "Faculty",
-      "papers": [
-        {
-          "title": "Department of Electrical Engineering and Computer Sciences University of California, Berkeley, CA 94720, USA",
-          "year": "N/A",
-          "one_line_summary": "This paper discusses and exemplifies the use of placeholders to mark missing subterms within representations for expository purposes."
-        },
-        {
-          "title": "Hierarchical control and learning for Markov decision processes",
-          "year": "N/A",
-          "one_line_summary": "This work explores hierarchical control and learning methodologies applied to Markov decision processes, also touching on the concept of placeholders."
-        },
-        {
-          "title": "Time Inconsistency with Heterogeneous Agents",
-          "year": "N/A",
-          "one_line_summary": "This paper investigates the phenomenon of time inconsistency in policy within economic models featuring heterogeneous agents."
-        },
-        {
-          "title": "Syntactic Code Search with Sequence-to-Tree Matching",
-          "year": "N/A",
-          "one_line_summary": "This paper presents a novel approach for syntactic code search using sequence-to-tree matching, specifically supporting expression placeholders."
-        },
-        {
-          "title": "Identification of novel transcripts in annotated genomes using RNA-Seq",
-          "year": "N/A",
-          "one_line_summary": "This work describes a new computational problem, 'reference annotation based transcript assembly,' for identifying novel transcripts from RNA-Seq data in existing genome annotations."
-        }
-      ],
-      "research_summary": "The researcher's work spans a broad spectrum of topics, from theoretical aspects of placeholders in representations and code search to practical applications in hierarchical control, economics, and bioinformatics. Their research often delves into complex systems, analyzing issues like time inconsistency in policy and novel transcript identification.",
-      "research_areas": [
-        "Computer Science",
-        "Machine Learning & Control Systems",
-        "Economics",
-        "Bioinformatics & Genomics",
-        "Representation Theory"
-      ],
-      "email": "amalaa@berkeley.edu"
     },
     {
       "name": "Krste Asanovi\u00c4\u0087",

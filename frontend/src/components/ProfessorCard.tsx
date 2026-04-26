@@ -6,6 +6,8 @@ interface Props {
   onEmailClick: (professor: Professor) => void
   saved: boolean
   onSaveClick: (professor: Professor) => void
+  selectedPaperTitles: string[]
+  onSelectedPaperTitlesChange: (titles: string[]) => void
 }
 
 function scoreColor(score: number): string {
@@ -20,12 +22,26 @@ function scoreBg(score: number): string {
   return '#f9fafb'
 }
 
-export default function ProfessorCard({ professor, onEmailClick, saved, onSaveClick }: Props) {
+export default function ProfessorCard({
+  professor,
+  onEmailClick,
+  saved,
+  onSaveClick,
+  selectedPaperTitles,
+  onSelectedPaperTitlesChange,
+}: Props) {
   const [papersOpen, setPapersOpen] = useState(false)
   const [hovered, setHovered] = useState(false)
 
   const nameUrl = professor.directory_url || professor.profile_url || professor.personal_website || professor.url
   const canOpenPapers = (professor.papers?.length ?? 0) > 0
+
+  const togglePaper = (title: string) => {
+    const next = selectedPaperTitles.includes(title)
+      ? selectedPaperTitles.filter(t => t !== title)
+      : [...selectedPaperTitles, title]
+    onSelectedPaperTitlesChange(next)
+  }
 
   return (
     <div
@@ -132,6 +148,14 @@ export default function ProfessorCard({ professor, onEmailClick, saved, onSaveCl
             <div style={styles.papers}>
               {professor.papers.map((paper, i) => (
                 <div key={i} style={styles.paper}>
+                  <label style={styles.paperCheckRow}>
+                    <input
+                      type="checkbox"
+                      checked={selectedPaperTitles.includes(paper.title)}
+                      onChange={() => togglePaper(paper.title)}
+                    />
+                    <span style={styles.paperCheckLabel}>Mention in email</span>
+                  </label>
                   <div style={styles.paperTitle}>
                     <a
                       href={paper.url || `https://scholar.google.com/scholar?q=${encodeURIComponent(paper.title)}`}
@@ -277,6 +301,17 @@ const styles: Record<string, React.CSSProperties> = {
     background: '#ffffff',
     borderRadius: '10px',
     border: '1px solid #d8e0da',
+  },
+  paperCheckRow: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    marginBottom: '6px',
+    fontSize: '11px',
+    color: '#647685',
+  },
+  paperCheckLabel: {
+    fontWeight: 600,
   },
   paperTitle: {
     fontSize: '13px',
