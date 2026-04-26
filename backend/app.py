@@ -6,7 +6,6 @@ from flask_cors import CORS
 from agents.discover import find_professors, find_professors_from_db
 from agents.enrich import enrich_professors, score_professors_from_db
 from agents.email_gen import draft_email
-from db import get_cached_results, save_results
 import pdfplumber
 import io
 
@@ -26,11 +25,6 @@ def search():
                 for page in pdf.pages:
                     resume_text += page.extract_text() or ''
 
-        # Check cache first
-        cached = get_cached_results(university, interests)
-        if cached:
-            return jsonify({'results': cached, 'from_cache': True})
-
         # Use local DB if available — papers already pre-summarized, just score match
         professors = find_professors_from_db(university, interests)
         if professors is not None:
@@ -38,9 +32,6 @@ def search():
         else:
             professors = find_professors(university, interests)
             enriched = enrich_professors(professors, interests, resume_text)
-
-        # Save to cache
-        save_results(university, interests, enriched)
 
         return jsonify({'results': enriched, 'from_cache': False})
 

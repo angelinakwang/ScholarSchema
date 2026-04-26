@@ -339,7 +339,7 @@ def _build_profile(person: dict, university: str, person_type: str,
     }
 
 
-def scrape_university(key: str, skip_names: set = None) -> list[dict]:
+def scrape_university(key: str, skip_names: set = None, limit: int | None = None) -> list[dict]:
     config = UNIVERSITY_CONFIGS[key]
     display_name = config['display_name']
     skip_names = skip_names or set()
@@ -368,7 +368,11 @@ def scrape_university(key: str, skip_names: set = None) -> list[dict]:
         else:
             _add(_collect_links(source), 'PhD Student')
 
-    print(f"\n[scrape] {len(all_people)} unique people to enrich")
+    if isinstance(limit, int) and limit > 0:
+        all_people = all_people[:limit]
+        print(f"\n[scrape] Limiting to first {len(all_people)} people")
+    else:
+        print(f"\n[scrape] {len(all_people)} unique people to enrich")
 
     enriched = []
     for i, person in enumerate(all_people, 1):
@@ -396,6 +400,12 @@ def main():
     parser.add_argument('--university', required=True,
                         choices=list(UNIVERSITY_CONFIGS.keys()))
     parser.add_argument('--out', default=None)
+    parser.add_argument(
+        '--limit',
+        type=int,
+        default=10,
+        help='Maximum number of people to enrich this run (default: 10)',
+    )
     args = parser.parse_args()
 
     out_path = args.out or os.path.join(
@@ -410,7 +420,7 @@ def main():
         print(f"[resume] Found {len(existing)} already processed — will skip them")
 
     already_done = {p['name'].lower() for p in existing}
-    people = scrape_university(args.university, skip_names=already_done)
+    people = scrape_university(args.university, skip_names=already_done, limit=args.limit)
     people = existing + people  # merge old + new
 
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
