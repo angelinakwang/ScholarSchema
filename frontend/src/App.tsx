@@ -28,7 +28,9 @@ export default function App() {
   })
 
   const [emailTarget, setEmailTarget] = useState<Professor | null>(null)
-  const [resumeText] = useState('')
+  const [resumeText, setResumeText] = useState('')
+  const [resumeFileName, setResumeFileName] = useState('')
+  const [paperSelections, setPaperSelections] = useState<Record<string, string[]>>({})
 
   const toggleSaved = (prof: Professor) => {
     const key = professorKey(prof)
@@ -45,11 +47,35 @@ export default function App() {
     ? results.filter(prof => savedKeys.has(professorKey(prof)))
     : results
 
+  const selectedPapersFor = (prof: Professor): string[] => {
+    const key = professorKey(prof)
+    return paperSelections[key] ?? []
+  }
+
+  const setSelectedPapersFor = (prof: Professor, titles: string[]) => {
+    const key = professorKey(prof)
+    setPaperSelections(prev => ({ ...prev, [key]: titles }))
+  }
+
+  const handleOpenEmail = (prof: Professor) => {
+    const key = professorKey(prof)
+    if (!paperSelections[key]) {
+      setPaperSelections(prev => ({ ...prev, [key]: [] }))
+    }
+    setEmailTarget(prof)
+  }
+
   const handleSearch = async (university: string, interests: string, resume: File | null) => {
     setLoading(true)
     setError('')
     setResults([])
     setSearched(true)
+    setResumeFileName(resume?.name || '')
+    setResumeText(
+      resume
+        ? `Resume was uploaded by the student (${resume.name}). Mention that the resume is attached.`
+        : ''
+    )
 
     try {
       const data = await searchProfessors(university, interests, resume)
@@ -70,6 +96,18 @@ export default function App() {
         a:hover { opacity: 0.8; }
         button:hover:not(:disabled) { opacity: 0.88; }
         button:disabled { opacity: 0.6; cursor: not-allowed; }
+        button {
+          appearance: none;
+          -webkit-appearance: none;
+          -webkit-tap-highlight-color: transparent;
+        }
+        button:focus,
+        button:focus-visible,
+        button:active {
+          outline: none !important;
+          box-shadow: none !important;
+          border-color: inherit;
+        }
       `}</style>
 
       <header style={styles.header}>
@@ -135,9 +173,11 @@ export default function App() {
                 <ProfessorCard
                   key={i}
                   professor={prof}
-                  onEmailClick={setEmailTarget}
+                  onEmailClick={handleOpenEmail}
                   saved={savedKeys.has(professorKey(prof))}
                   onSaveClick={toggleSaved}
+                  selectedPaperTitles={selectedPapersFor(prof)}
+                  onSelectedPaperTitlesChange={titles => setSelectedPapersFor(prof, titles)}
                 />
               ))}
             </div>
@@ -149,6 +189,9 @@ export default function App() {
         <EmailModal
           professor={emailTarget}
           resumeText={resumeText}
+          resumeFileName={resumeFileName}
+          selectedPaperTitles={selectedPapersFor(emailTarget)}
+          onSelectedPaperTitlesChange={titles => setSelectedPapersFor(emailTarget, titles)}
           onClose={() => setEmailTarget(null)}
         />
       )}
