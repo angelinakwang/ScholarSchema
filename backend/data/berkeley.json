@@ -1,398 +1,176 @@
 [
-  {
+    {
     "name": "Pieter Abbeel",
-    "url": "https://eecs.berkeley.edu/resources/students/",
-    "directory_url": "https://www2.eecs.berkeley.edu/Faculty/Homepages/abbeel.html",
-    "university": "UC Berkeley",
+    "title": "Professor, Jim Gray Chair of Engineering",
+    "department": "EECS",
     "type": "Faculty",
+    "url": "https://people.eecs.berkeley.edu/~pabbeel/",
+    "profile_url": "https://people.eecs.berkeley.edu/~pabbeel/",
+    "email": "pabbeel@cs.berkeley.edu",
+    "university": "Berkeley",
+    "interests": ["reinforcement learning", "robotics", "deep learning", "robot learning", "apprenticeship learning", "unsupervised learning"],
+    "research_summary": "Directs the Berkeley Robot Learning Lab and co-directs BAIR, pioneering deep reinforcement learning and apprenticeship learning for teaching robots complex skills from human demonstrations. Co-founded Covariant (AI-powered industrial robotics) and Gradescope, and his foundational work on learning from human feedback directly underpins modern RLHF methods used in LLM alignment.",
     "papers": [
       {
-        "title": "Optimizing Expectations: From Deep Reinforcement Learning to Stochastic Computation Graphs",
-        "year": null,
-        "one_line_summary": "Explores methods for optimizing expectations, linking deep reinforcement learning with stochastic computation graphs."
+        "title": "Learning to Learn with Gradients (MAML)",
+        "year": "2017",
+        "one_line_summary": "Introduces Model-Agnostic Meta-Learning, training models to adapt to new tasks in just a few gradient steps by optimizing for fast adaptation rather than task-specific performance. Became one of the most cited meta-learning papers, enabling few-shot learning across robotics, vision, and NLP."
       },
       {
-        "title": "CAREER: Apprenticeship Learning for Robotic Manipulation of Deformable Objects",
-        "year": null,
-        "one_line_summary": "Focuses on applying apprenticeship learning to enable robots to manipulate deformable objects."
+        "title": "Apprenticeship Learning via Inverse Reinforcement Learning",
+        "year": "2004",
+        "one_line_summary": "Proposes learning reward functions directly from expert demonstrations rather than hand-engineering them, allowing agents to match expert behavior on complex tasks. Established inverse reinforcement learning as a practical approach to imitation learning in robotics and autonomous systems."
       },
       {
-        "title": "Apprenticeship Learning for Robotic Control",
-        "year": null,
-        "one_line_summary": "Investigates apprenticeship learning for robotic control, including optimization-based motion planning in high-dimensional spaces."
-      },
-      {
-        "title": "Toward a science of autonomy for physical systems: paths",
-        "year": null,
-        "one_line_summary": "Discusses the foundational principles for developing autonomous physical systems that can reliably achieve goals."
-      },
-      {
-        "title": "Autonomous helicopter aerobatics through apprenticeship learning",
-        "year": null,
-        "one_line_summary": "Demonstrates autonomous helicopter flight, including aerobatics, achieved through apprenticeship learning."
+        "title": "Autonomous Helicopter Aerobatics through Apprenticeship Learning",
+        "year": "2010",
+        "one_line_summary": "Demonstrates that a helicopter can learn to perform advanced aerobatic maneuvers by observing a human pilot, using apprenticeship learning to infer the reward structure behind expert behavior. Showed that IRL-based approaches can match or exceed human expert performance on physically demanding real-world control tasks."
       }
-    ],
-    "research_summary": "Pieter Abbeel's research focuses on developing autonomous systems, particularly in robotics, through advanced control techniques. A prominent method employed across several projects is apprenticeship learning, enabling robots to acquire complex skills by observing human experts.",
-    "research_areas": [
-      "Apprenticeship Learning",
-      "Robotic Control",
-      "Autonomous Systems",
-      "Deep Reinforcement Learning",
-      "Robotic Manipulation"
-    ],
-    "email": "pabbeel@cs.berkeley.edu"
+    ]
   },
   {
-    "name": "Krste Asanovi\u00c4\u0087",
-    "url": "https://eecs.berkeley.edu/resources/students/",
-    "directory_url": "https://www2.eecs.berkeley.edu/Faculty/Homepages/asanovic.html",
-    "university": "UC Berkeley",
+    "name": "Krste Asanović",
+    "title": "Professor Emeritus, Professor of the Graduate School",
+    "department": "Computer Science Division, EECS",
     "type": "Faculty",
+    "url": "https://people.eecs.berkeley.edu/~krste/",
+    "profile_url": "https://people.eecs.berkeley.edu/~krste/",
+    "email": "krste@berkeley.edu",
+    "university": "Berkeley",
+    "interests": ["computer architecture", "RISC-V", "VLSI design", "parallel programming", "hardware accelerators", "machine learning hardware"],
+    "research_summary": "Co-creator of the RISC-V open instruction set architecture and co-founder of SiFive, leading research on agile hardware design methodologies and specialized computing ecosystems at Berkeley. Directs the SLICE lab, developing open-source tools like Chipyard, FireSim, and the Gemmini ML accelerator generator that are now widely used across academia and industry.",
     "papers": [
       {
-        "title": "Data parallel programming for irregular tree computations",
-        "year": "unknown",
-        "one_line_summary": "This paper examines the application of data parallel primitives and aggressive compiler optimizations to improve multicore utilization for computations over irregular tree abstract structures."
+        "title": "The RISC-V Instruction Set Manual",
+        "year": "2019",
+        "one_line_summary": "Defines the RISC-V free and open ISA originally developed at UC Berkeley, designed to support a wide range of implementations from embedded microcontrollers to warehouse-scale computers. RISC-V has since become one of the most widely adopted open ISAs in history, with billions of chips shipped and adoption by Google, NVIDIA, and Western Digital."
       },
       {
-        "title": "Microarchitectural Design-Space Exploration of an In-Order RISC-V Processor in a 22nm CMOS Technology",
-        "year": "unknown",
-        "one_line_summary": "This work explores the trade-offs between IPC and maximum clock frequency in an in-order RISC-V processor design, evaluating the impact on overall performance."
+        "title": "Gemmini: Enabling Systematic Deep-Learning Architecture Evaluation via Full-Stack Integration",
+        "year": "2021",
+        "one_line_summary": "Presents Gemmini, an open-source systolic-array ML accelerator generator that produces full hardware-software stacks for evaluating neural network accelerator designs. Enables researchers to explore the entire design space from chip architecture to compiler and OS integration within a unified Chipyard framework."
+      },
+      {
+        "title": "FireSim: FPGA-Accelerated Cycle-Exact Scale-Out System Simulation in the Public Cloud",
+        "year": "2018",
+        "one_line_summary": "Introduces FireSim, a platform that runs cycle-accurate RTL simulations of complete datacenter-scale systems on cloud FPGAs at speeds 100x faster than software simulators. Enables researchers to simulate thousands of servers running real software stacks, making previously intractable architecture research experiments feasible."
       }
-    ],
-    "research_summary": "Krste Asanovi's research encompasses both high-level programming paradigms for efficient multicore utilization and low-level processor microarchitecture. Their work investigates data parallel programming for irregular tree computations, leveraging compiler optimizations, alongside exploring design-space trade-offs for in-order RISC-V processors concerning performance metrics like IPC and clock frequency.",
-    "research_areas": [
-      "Data Parallel Programming",
-      "Compiler Optimization",
-      "Multicore Computing",
-      "Processor Architecture",
-      "RISC-V",
-      "Performance Evaluation"
-    ],
-    "email": "krste@berkeley.edu"
-  },
-  {
-    "name": "Babak Ayazifar",
-    "url": "https://eecs.berkeley.edu/resources/students/",
-    "directory_url": "https://www2.eecs.berkeley.edu/Faculty/Homepages/ayazifar.html",
-    "university": "UC Berkeley",
-    "type": "Faculty",
-    "papers": [
-      {
-        "title": "Graph spectra and modal dynamics of oscillatory networks",
-        "year": null,
-        "one_line_summary": "This paper focuses on developing analytical tools using graph spectra and modal dynamics to understand the behavior of networks with dynamic and static elements."
-      },
-      {
-        "title": "Circulant structures and graph signal processing",
-        "year": null,
-        "one_line_summary": "This paper investigates circulant structures and their application in graph signal processing, particularly regarding the frequency content and properties of graph signals."
-      },
-      {
-        "title": "Pel-adaptive model-based interpolation of spatially subsampled images",
-        "year": null,
-        "one_line_summary": "This thesis proposes a pel-adaptive model-based interpolation scheme for spatially subsampled images, founded on theoretical assumptions about luminance."
-      },
-      {
-        "title": "The elegant geometry of Fourier analysis",
-        "year": null,
-        "one_line_summary": "This paper explores the geometric aspects of Fourier analysis, particularly for discrete-time periodic signals represented as finite-dimensional Cartesian vectors."
-      },
-      {
-        "title": "Rethinking Fourier's legacy in signals and systems education",
-        "year": null,
-        "one_line_summary": "This paper re-evaluates the pedagogical approach to Fourier analysis within gateway Signals and Systems courses at UC Berkeley."
-      }
-    ],
-    "research_summary": "Babak Ayazifar's research develops design-oriented analytical tools for understanding complex systems, ranging from the modal dynamics of oscillatory networks to the properties of graph signals. His work also explores advanced image processing techniques and reconsiders the pedagogical approach to fundamental concepts like Fourier analysis in signals and systems education.",
-    "research_areas": [
-      "Graph Signal Processing and Network Dynamics",
-      "Fourier Analysis and Signals & Systems Education",
-      "Image Interpolation"
-    ],
-    "email": "ayazifar@berkeley.edu"
+    ]
   },
   {
     "name": "Ruzena Bajcsy",
-    "url": "https://eecs.berkeley.edu/resources/students/",
-    "directory_url": "https://www2.eecs.berkeley.edu/Faculty/Homepages/bajcsy.html",
-    "university": "UC Berkeley",
+    "title": "Professor Emeritus, EECS",
+    "department": "Electrical Engineering and Computer Sciences",
     "type": "Faculty",
+    "url": "https://people.eecs.berkeley.edu/~bajcsy/",
+    "profile_url": "https://people.eecs.berkeley.edu/~bajcsy/",
+    "email": "bajcsy@eecs.berkeley.edu",
+    "university": "Berkeley",
+    "interests": ["computer vision", "robotics", "AI", "human modeling", "assistive technologies", "tele-immersion", "sensor networks"],
+    "research_summary": "Pioneered the concept of 'active perception' — the idea that perception is an active, goal-directed process rather than passive image processing — which became foundational to modern robotics and computer vision. Directs the Tele-immersion Lab at Berkeley, developing 3D telepresence systems for remote collaboration, rehabilitation, and healthcare monitoring using depth cameras and sensor networks.",
     "papers": [
       {
-        "title": "Robotics at the University of Pennsylvania from Birth to Maturity: A Review of 30 Years of Research",
-        "year": "Unknown",
-        "one_line_summary": "Reviews the history of robotics research at the University of Pennsylvania, highlighting early work including digital imaging."
+        "title": "Active Perception",
+        "year": "1988",
+        "one_line_summary": "Introduced the paradigm of active perception, arguing that intelligent systems should control their sensors to gather task-relevant information rather than passively processing whatever data arrives. This foundational paper directly influenced decades of work in robotics, computer vision, and autonomous systems by reframing perception as a purposeful, action-driven process."
       },
       {
-        "title": "Precise indoor localization using smart phones",
-        "year": "Unknown",
-        "one_line_summary": "Describes an indoor localization application utilizing current smartphone sensing capabilities."
+        "title": "Design and Evaluation of an Interactive Exercise Coaching System for Older Adults",
+        "year": "2015",
+        "one_line_summary": "Presents a Kinect-based system that monitors and coaches elderly users through physical therapy exercises at home, providing real-time feedback without requiring clinical supervision. Demonstrates that depth-sensor-based motion analysis can reliably assess exercise quality and reduce barriers to rehabilitation for aging populations."
       },
       {
-        "title": "A Framework for Characterization and Comparison of Event Related Neuronal Activity",
-        "year": "Unknown",
-        "one_line_summary": "Proposes a framework for characterizing and comparing event-related neuronal activity."
-      },
-      {
-        "title": "Grand Challenges for Computer Science and Engineering",
-        "year": "Unknown",
-        "one_line_summary": "Outlines and discusses major challenges and future directions within computer science and engineering."
-      },
-      {
-        "title": "Robotics in Service and the Responsibility to Society [Ethical, Legal, and Societal Issues]",
-        "year": "Unknown",
-        "one_line_summary": "Examines the ethical, legal, and societal aspects of service robotics and societal responsibility."
+        "title": "Semi-Autonomous Vehicular Control Using Driver Modeling",
+        "year": "2014",
+        "one_line_summary": "Develops a probabilistic model of driver intent and behavior that enables a vehicle to smoothly share control between human and autonomous systems based on inferred driver goals. Shows that intent-aware shared autonomy reduces intervention conflicts and improves safety compared to threshold-based takeover systems."
       }
-    ],
-    "research_summary": "Ruzena Bajcsy's research encompasses a broad range of topics, from the historical and ethical dimensions of robotics and early digital image processing to advanced indoor localization and the characterization of neuronal activity. She also contributes to defining grand challenges in computer science and engineering, reflecting her leadership and vision in the field.",
-    "research_areas": [
-      "Robotics",
-      "Computer Vision",
-      "Indoor Localization",
-      "Biomedical Engineering",
-      "Computer Science and Engineering Ethics and Societal Impact"
-    ],
-    "email": "bajcsy@seas.upenn.edu"
-  },
-  {
-    "name": "Michael Ball",
-    "url": "https://eecs.berkeley.edu/resources/students/",
-    "directory_url": "https://www2.eecs.berkeley.edu/Faculty/Homepages/mball.html",
-    "university": "UC Berkeley",
-    "type": "Faculty",
-    "papers": [
-      {
-        "title": "The Beauty and Joy Computing: CS Curricula That Scales from Middle School to University",
-        "year": "Unknown",
-        "one_line_summary": "This paper details the development of a Computer Science Principles (CSP) course at UC Berkeley, designed to be scalable for students ranging from middle school to university non-majors."
-      },
-      {
-        "title": "Ground delay program planning under uncertainty based on the ration-by-distance principle",
-        "year": "Unknown",
-        "one_line_summary": "This research, conducted at UC Berkeley's Institute of Transportation Studies, focuses on developing methods for ground delay program planning in air traffic management when faced with uncertainties."
-      }
-    ],
-    "research_summary": "Michael Ball's research at UC Berkeley encompasses computer science education and transportation planning. He has developed a scalable Computer Science Principles curriculum for various educational levels and contributed to ground delay program planning under uncertainty at the Institute of Transportation Studies.",
-    "research_areas": [
-      "Computer Science Education",
-      "Curriculum Development",
-      "Transportation Planning",
-      "Air Traffic Management"
-    ],
-    "email": "ball@berkeley.edu"
+    ]
   },
   {
     "name": "David Bamman",
-    "url": "https://eecs.berkeley.edu/resources/students/",
-    "directory_url": "https://www2.eecs.berkeley.edu/Faculty/Homepages/dbamman.html",
-    "university": "UC Berkeley",
+    "title": "Associate Professor",
+    "department": "School of Information",
     "type": "Faculty",
+    "url": "https://people.ischool.berkeley.edu/~dbamman/",
+    "profile_url": "https://people.ischool.berkeley.edu/~dbamman/",
+    "email": "dbamman@berkeley.edu",
+    "university": "Berkeley",
+    "interests": ["NLP", "natural language processing", "cultural analytics", "digital humanities", "computational social science", "large language models", "literary analysis"],
+    "research_summary": "Applies NLP and AI to empirical questions in the humanities and social sciences, building specialized tools like BookNLP and LitBank for processing literary texts at scale. His lab studies representation and bias in literature, film, and culture — including measuring diversity in Hollywood, tracking gender in fiction, and auditing what large language models like GPT-4 have memorized from books.",
     "papers": [
       {
-        "title": "Measuring diversity in Hollywood through the large-scale computational analysis of film",
-        "year": null,
-        "one_line_summary": "Analyzes film collections computationally to measure diversity representation in Hollywood productions."
+        "title": "Measuring Diversity in Hollywood through the Large-Scale Computational Analysis of Film",
+        "year": "2024",
+        "one_line_summary": "Uses computer vision and NLP to quantify gender and racial representation across thousands of Hollywood films, revealing systematic disparities in screen time, dialogue, and character roles. Published in PNAS, demonstrating how computational methods can make large-scale diversity audits reproducible and scalable across entire film archives."
       },
       {
-        "title": "Open extraction of fine-grained political statements",
-        "year": null,
-        "one_line_summary": "Develops methods for extracting detailed political statements from text, situating them within a political space."
+        "title": "Speak, Memory: An Archaeology of Books Known to ChatGPT/GPT-4",
+        "year": "2023",
+        "one_line_summary": "Develops a method to empirically measure which books GPT-4 has memorized from training data by probing the model with masked passages and analyzing its completions. Finds that GPT-4 has significantly more knowledge of books that are likely in its training set, raising important questions about copyright and the opacity of LLM training data."
       },
       {
-        "title": "An annotated dataset of literary entities",
-        "year": null,
-        "one_line_summary": "Introduces a new annotated dataset specifically designed for literary entities to support digital humanities research."
-      },
-      {
-        "title": "Measuring the Stories in Contemporary Songs",
-        "year": null,
-        "one_line_summary": "Conducts an empirical study to quantify and understand the narrative elements present in contemporary songs."
-      },
-      {
-        "title": "On classification with large language models in cultural analytics",
-        "year": null,
-        "one_line_summary": "Surveys and assesses the application of large language models for classification tasks within the field of cultural analytics."
+        "title": "On Classification with Large Language Models in Cultural Analytics",
+        "year": "2024",
+        "one_line_summary": "Systematically evaluates the reliability of LLMs for classification tasks in cultural analytics, identifying failure modes when applying general-purpose models to literary and historical texts. Argues that domain-specific evaluation frameworks are essential rather than assuming general benchmark performance transfers to humanistic applications."
       }
-    ],
-    "research_summary": "David Bamman's research applies large-scale computational and natural language processing methods to analyze cultural artifacts and social phenomena. This work spans areas such as measuring diversity in film, extracting political statements, understanding narratives in music, and leveraging large language models for classification in cultural analytics and digital humanities.",
-    "research_areas": [
-      "Cultural Analytics",
-      "Natural Language Processing",
-      "Digital Humanities",
-      "Computational Social Science"
-    ],
-    "email": "dbamman@berkeley.edu"
-  },
-  {
-    "name": "Brian A. Barsky",
-    "url": "https://eecs.berkeley.edu/resources/students/",
-    "directory_url": "https://www2.eecs.berkeley.edu/Faculty/Homepages/barsky.html",
-    "university": "UC Berkeley",
-    "type": "Faculty",
-    "papers": [
-      {
-        "title": "Computer graphics and geometric modeling using Beta-splines",
-        "year": null,
-        "one_line_summary": "This paper investigates Beta-splines to enhance computer graphics and geometric modeling by better approximating curved lines and surfaces than traditional methods."
-      },
-      {
-        "title": "University of California at Berkeley Technical Report No. UCB/CSD 88/442 August 1988",
-        "year": 1988,
-        "one_line_summary": "It provides a rigorous mathematical foundation for the geometric continuity of rational Beta-splines of arbitrary order."
-      },
-      {
-        "title": "E-mail: barsky@ cs. berkeley. edu. http://www. cs. berkeley. edu/~ barsky",
-        "year": null,
-        "one_line_summary": "This paper focuses on methods for calculating the distance between 2D convex regions or 3D convex bodies, applicable in robotics, CAD/CAM, and computer graphics."
-      },
-      {
-        "title": "A framework for aberration compensated displays",
-        "year": 2004,
-        "one_line_summary": "This paper proposes a framework for aberration-compensated displays, integrating vision-realistic rendering to compute and display images that account for human vision characteristics."
-      },
-      {
-        "title": "Arbitrary subdivision of B\u00e9zier curves",
-        "year": null,
-        "one_line_summary": "This paper describes the powerful technique of arbitrary subdivision, which involves splitting B\u00e9zier curves or surfaces into smaller, identical pieces for various applications."
-      }
-    ],
-    "research_summary": "Brian A. Barsky's research primarily centers on computer graphics and geometric modeling, with a strong emphasis on the mathematical foundations and practical applications of splines for defining and manipulating curved shapes. His work also explores advanced display technologies for vision-realistic rendering and geometric algorithms relevant to robotics, CAD/CAM, and general graphics.",
-    "research_areas": [
-      "Computer Graphics",
-      "Geometric Modeling",
-      "Spline Theory",
-      "Geometric Continuity",
-      "Vision-Realistic Rendering",
-      "Aberration-Compensated Displays",
-      "Geometric Algorithms",
-      "Robotics and CAD/CAM Applications"
-    ],
-    "email": "barsky@berkeley.edu"
+    ]
   },
   {
     "name": "Peter Bartlett",
-    "url": "https://eecs.berkeley.edu/resources/students/",
-    "directory_url": "https://www2.eecs.berkeley.edu/Faculty/Homepages/bartlett.html",
-    "university": "UC Berkeley",
+    "title": "Professor",
+    "department": "EECS and Statistics",
     "type": "Faculty",
+    "url": "https://people.eecs.berkeley.edu/~bartlett/",
+    "profile_url": "https://people.eecs.berkeley.edu/~bartlett/",
+    "email": "peter@berkeley.edu",
+    "university": "Berkeley",
+    "interests": ["machine learning theory", "statistical learning theory", "deep learning", "optimization", "reinforcement learning", "pattern classification"],
+    "research_summary": "Directs the Collaboration on the Theoretical Foundations of Deep Learning and the Foundations of Data Science Institute at Berkeley, developing mathematical theory that explains why overparameterized deep networks generalize well despite fitting noisy training data exactly. His work establishes fundamental complexity bounds, convergence guarantees, and statistical limits that underpin modern understanding of deep learning and reinforcement learning.",
     "papers": [
       {
-        "title": "Unveiling the Family of Optimal Accelerations in Minimax Optimization and Fixed-Point Algorithms",
-        "year": "Unknown",
-        "one_line_summary": "This paper introduces a novel family of dual accelerated methods for solving minimax optimization and fixed-point problems."
+        "title": "Benign Overfitting in Linear Regression",
+        "year": "2020",
+        "one_line_summary": "Proves mathematically that interpolating models — those that perfectly fit noisy training data — can still generalize well under specific conditions on the data distribution, overturning the classical bias-variance tradeoff intuition. This result became foundational for understanding why massively overparameterized deep neural networks work in practice despite fitting training data exactly."
       },
       {
-        "title": "Learning with a slowly changing distribution",
-        "year": "Unknown",
-        "one_line_summary": "This research investigates the problem of learning from randomly chosen examples when their probability distribution changes gradually over time."
+        "title": "Nearly-tight VC-dimension and Pseudodimension Bounds for Piecewise Linear Neural Networks",
+        "year": "2019",
+        "one_line_summary": "Establishes tight upper and lower bounds on the VC-dimension of deep ReLU networks as a function of depth and width, precisely characterizing their expressive capacity. These bounds are essential for understanding the sample complexity of learning with deep networks and form a cornerstone of modern neural network theory."
       },
       {
-        "title": "Fast rates for estimation error and oracle inequalities for model selection",
-        "year": "Unknown",
-        "one_line_summary": "This paper analyzes complexity penalization methods for model selection, aiming to optimize the balance between estimation and approximation errors."
-      },
-      {
-        "title": "A statistical analysis for supervised deep learning with exponential families for intrinsically low-dimensional data",
-        "year": "Unknown",
-        "one_line_summary": "This work provides a statistical analysis for deep supervised learning, focusing on how test error convergence rates relate to intrinsic data dimensionality."
-      },
-      {
-        "title": "Information-theoretic lower bounds on the oracle complexity of convex optimization",
-        "year": "Unknown",
-        "one_line_summary": "This paper establishes fundamental information-theoretic lower bounds on the oracle complexity of convex optimization problems, addressing their inherent hardness."
+        "title": "Spectrally-normalized Margin Bounds for Neural Networks",
+        "year": "2017",
+        "one_line_summary": "Derives generalization bounds for deep networks based on the spectral norms of weight matrices rather than the total number of parameters, explaining why large neural networks can generalize despite having far more parameters than training examples. Introduced a practical framework for measuring the complexity of neural networks that connects theoretical bounds to empirical performance."
       }
-    ],
-    "research_summary": "Peter Bartlett's research primarily focuses on advancing optimization theory, including developing accelerated methods for minimax and fixed-point problems and establishing information-theoretic lower bounds on the complexity of convex optimization. His work also extensively explores various aspects of machine learning, such as learning under slowly changing data distributions, model selection strategies, and statistical analyses of deep learning performance related to intrinsic data dimensions.",
-    "research_areas": [
-      "Optimization Theory",
-      "Machine Learning",
-      "Statistical Learning Theory",
-      "Algorithmic Complexity"
-    ],
-    "email": "peter@berkeley.edu"
-  },
+    ]
+  }, 
   {
-    "name": "Alexandre Bayen",
-    "url": "https://eecs.berkeley.edu/resources/students/",
-    "directory_url": "https://www2.eecs.berkeley.edu/Faculty/Homepages/bayen.html",
-    "university": "UC Berkeley",
-    "type": "Faculty",
+    "name": "Aayushi Shrivastava",
+    "title": "PhD Student, Mechanical Engineering",
+    "department": "Mechanical Engineering",
+    "type": "PhD Student",
+    "url": "https://sites.google.com/view/aayushishrivastava/home",
+    "profile_url": "https://sites.google.com/view/aayushishrivastava/home",
+    "email": "aayushis@berkeley.edu",
+    "university": "Berkeley",
+    "interests": ["robotics", "control theory", "machine learning", "motion planning", "bipedal locomotion", "human-robot collaboration", "autonomous vehicles"],
+    "research_summary": "PhD student at the ICON Lab at Berkeley combining machine learning and control theory to develop safe motion planning algorithms for highly dynamic robots. Her work focuses on provably safe control policies for hybrid dynamical systems and multi-terrain locomotion for bipedal robots.",
     "papers": [
       {
-        "title": "CIRCLES: Congestion impacts reduction via CAV-in-the-loop Lagrangian energy smoothing",
-        "year": "N/A",
-        "one_line_summary": "Develops a framework for control strategies to smooth traffic flow and reduce congestion using connected and automated vehicles."
+        "title": "Demonstrating a Robust Walking Algorithm for Underactuated Bipedal Robots in Non-flat, Non-stationary Environments",
+        "year": "2024",
+        "one_line_summary": "Presents a walking controller for bipedal robots that remains stable across uneven, moving terrain without requiring flat or stationary ground assumptions. Demonstrated on hardware at IROS 2024, showing the algorithm's robustness to real-world surface variations that typically cause bipedal robots to fall."
       },
       {
-        "title": "Impacts of the mobile internet on transportation cyberphysical systems: traffic monitoring using smartphones",
-        "year": "N/A",
-        "one_line_summary": "Investigates the use of mobile internet and smartphones for traffic monitoring, building on the Mobile Century experiment."
+        "title": "Stair Climbing using the Angular Momentum Linear Inverted Pendulum Model and Model Predictive Control",
+        "year": "2023",
+        "one_line_summary": "Develops a stair-climbing controller for bipedal robots using the Angular Momentum Linear Inverted Pendulum model combined with Model Predictive Control to plan stable footstep trajectories in real time. Demonstrates reliable stair ascent and descent on hardware, a challenging task for underactuated bipedal systems."
       },
       {
-        "title": "Evaluation of traffic data obtained via GPS-enabled mobile phones: The Mobile Century field experiment",
-        "year": "N/A",
-        "one_line_summary": "Evaluates traffic data collected during the Mobile Century field experiment using GPS-enabled mobile phones."
-      },
-      {
-        "title": "Path and travel time inference from GPS probe vehicle data",
-        "year": "N/A",
-        "one_line_summary": "Focuses on inferring paths and travel times from GPS probe vehicle data, as part of the Berkeley-Nokia Mobile Millennium project."
-      },
-      {
-        "title": "Mobile phones as seismologic sensors: Automating data extraction for the iShake system",
-        "year": "N/A",
-        "one_line_summary": "Describes the iShake system, which utilizes mobile phones as seismologic sensors and automates data extraction in real time."
+        "title": "Learning Control Policies to Provably Satisfy Hard Affine Constraints for Black-Box Hybrid Dynamical Systems",
+        "year": "2026",
+        "one_line_summary": "Proposes a learning-based method for synthesizing control policies that are guaranteed to satisfy hard safety constraints for hybrid dynamical systems whose dynamics are not fully known. Addresses a key open problem in safe reinforcement learning where formal safety guarantees are needed even when the system model is a black box."
       }
-    ],
-    "research_summary": "Alexandre Bayen's research primarily focuses on leveraging mobile technology, such as smartphones and GPS, for advanced transportation systems and novel sensing applications. This includes developing control strategies for traffic flow smoothing using connected vehicles, monitoring traffic with mobile phones, inferring travel patterns, and exploring applications like using phones as seismologic sensors.",
-    "research_areas": [
-      "Traffic Management and Control",
-      "Mobile Sensing and Data Collection",
-      "Transportation Data Analytics and Inference",
-      "Novel Mobile Sensing Applications"
-    ],
-    "email": "bayen@berkeley.edu"
-  },
-  {
-    "name": "Placeholder for Missing",
-    "url": "https://eecs.berkeley.edu/resources/students/",
-    "directory_url": "https://www2.eecs.berkeley.edu/Faculty/Homepages/amalaa.html",
-    "university": "UC Berkeley",
-    "type": "Faculty",
-    "papers": [
-      {
-        "title": "Department of Electrical Engineering and Computer Sciences University of California, Berkeley, CA 94720, USA",
-        "year": "2024",
-        "one_line_summary": "The research problem addressed in this paper is the representation of missing subterms in a hierarchical structure, which is crucial for efficient processing and analysis. To tackle this problem, the authors employ a placeholder-based approach, where missing subterms are marked with placeholders to facilitate expository purposes. The authors develop a novel method for using these placeholders to exemplify the use of placeholders in different contexts. The main finding of this paper is that the use of placeholders can significantly improve the efficiency of processing and analyzing hierarchical structures, which has important implications for various applications in computer science."
-      },
-      {
-        "title": "Hierarchical control and learning for Markov decision processes",
-        "year": "2024",
-        "one_line_summary": "This paper investigates the problem of hierarchical control and learning in Markov decision processes, which is a fundamental challenge in the field of artificial intelligence. To address this problem, the authors propose a hierarchical control framework that integrates learning and planning to achieve optimal control policies. The authors develop a novel algorithm that uses placeholders to represent missing pages in the manuscript, which enables the development of a complete and coherent control strategy. The main result of this paper is that the proposed hierarchical control framework can learn optimal control policies in complex environments, which has significant implications for the development of autonomous systems."
-      },
-      {
-        "title": "Time Inconsistency with Heterogeneous Agents",
-        "year": "2024",
-        "one_line_summary": "The research question addressed in this paper is how time inconsistency affects policy decisions in heterogeneous agent economies, where individual welfare gains need to be aggregated. To analyze this problem, the authors develop a theoretical framework that accounts for the time inconsistency of policy decisions and the heterogeneity of agents. The authors use a novel approach that involves aggregating individual welfare gains to study the impact of time inconsistency on policy decisions. The main finding of this paper is that time inconsistency can have significant effects on policy decisions in heterogeneous agent economies, which highlights the need for policymakers to consider the dynamic nature of decision-making processes."
-      },
-      {
-        "title": "Syntactic Code Search with Sequence-to-Tree Matching",
-        "year": "2024",
-        "one_line_summary": "This paper addresses the problem of syntactic code search, which is a fundamental challenge in software development and maintenance. To tackle this problem, the authors propose a novel approach that uses sequence-to-tree matching to search for code fragments that match a given query. The authors develop a new algorithm that uses placeholders to represent expression placeholders, which enables the development of a more efficient and effective code search strategy. The main result of this paper is that the proposed sequence-to-tree matching approach can significantly improve the accuracy and efficiency of syntactic code search, which has important implications for software development and maintenance."
-      },
-      {
-        "title": "Identification of novel transcripts in annotated genomes using RNA-Seq",
-        "year": "2024",
-        "one_line_summary": "The research problem addressed in this paper is the identification of novel transcripts in annotated genomes using RNA-Seq data, which is a challenging task due to the complexity of transcriptome data. To address this problem, the authors propose a novel approach that involves assembling novel transcripts in the context of an existing annotation. The authors develop a new method that uses a reference annotation-based transcript assembly strategy to identify novel transcripts. The main finding of this paper is that the proposed approach can effectively identify novel transcripts in annotated genomes, which has significant implications for our understanding of the transcriptome and its role in various biological processes."
-      }
-    ],
-    "research_summary": "The researcher's work focuses on developing novel methods for addressing complex problems in various fields, including computer science and economics. Their research explores the use of placeholders, hierarchical control, and sequence-to-tree matching to improve the efficiency and accuracy of different systems and processes.",
-    "research_areas": [
-      "Computer Science",
-      "Electrical Engineering",
-      "Economics"
-    ],
-    "email": "amalaa@berkeley.edu"
+    ]
   }
 ]

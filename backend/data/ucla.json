@@ -1,0 +1,60 @@
+[
+  {
+    "name": "Jason Cong",
+    "title": "Volgenau Chair for Engineering Excellence, Professor",
+    "department": "Computer Science",
+    "type": "Faculty",
+    "url": "https://vast.cs.ucla.edu/people/faculty/jason-cong",
+    "profile_url": "https://vast.cs.ucla.edu/people/faculty/jason-cong",
+    "email": "cong@cs.ucla.edu",
+    "university": "UCLA",
+    "interests": ["FPGA", "electronic design automation", "machine learning acceleration", "customizable computing", "quantum computing", "VLSI"],
+    "research_summary": "Directs the VAST Lab at UCLA, focusing on customizable domain-specific computing, FPGA design automation, and hardware acceleration for machine learning and big-data applications. Pioneer of FPGA high-level synthesis — his tools have been adopted industry-wide and his research has over 43,000 citations.",
+    "papers": [
+      {
+        "title": "Domain-Specific Computing for Machine Learning: From Chips to Systems",
+        "year": "2023",
+        "one_line_summary": "Explores how building hardware specifically designed for ML tasks — rather than using general-purpose CPUs or GPUs — can achieve orders-of-magnitude improvements in speed and energy efficiency. Covers the full stack from custom silicon chips to system-level design methodologies for deploying these accelerators at scale."
+      },
+      {
+        "title": "FPGA High-Level Synthesis: Past, Present, and Future",
+        "year": "2022",
+        "one_line_summary": "Traces the evolution of high-level synthesis tools that automatically convert C/C++ code into FPGA hardware, from early academic research to widely-used commercial tools like Vivado HLS. Discusses remaining challenges in quality of results, debugging, and making HLS accessible to non-hardware experts."
+      },
+      {
+        "title": "Quantum Computing: An Overview and Progress",
+        "year": "2022",
+        "one_line_summary": "Provides a comprehensive overview of quantum computing fundamentals, current hardware platforms, and the gap between theoretical promise and practical near-term capability. Identifies key research challenges in error correction, qubit scalability, and quantum software that must be solved before quantum advantage becomes widespread."
+      }
+    ]
+  },
+  {
+    "name": "Wei Wang",
+    "title": "Leonard Kleinrock Chair Professor",
+    "department": "Computer Science and Computational Medicine",
+    "type": "Faculty",
+    "url": "https://web.cs.ucla.edu/~weiwang/",
+    "profile_url": "https://web.cs.ucla.edu/~weiwang/",
+    "email": "weiwang@cs.ucla.edu",
+    "university": "UCLA",
+    "interests": ["machine learning", "data mining", "NLP", "bioinformatics", "computational biology", "computational medicine", "big data", "AI for science"],
+    "research_summary": "Directs the Scalable Analytics Institute (ScAI) at UCLA, working at the intersection of machine learning, data mining, and computational biology to extract insights from large-scale biomedical data. Her lab applies NLP and AI to problems in cancer genomics, drug discovery, and clinical medicine, with over 400 publications and fellowships from both ACM and IEEE.",
+    "papers": [
+      {
+        "title": "Multi-modal Foundation Models for Biological and Clinical Data",
+        "year": "2024",
+        "one_line_summary": "Develops foundation models that jointly learn from diverse biological data types — genomics, proteomics, and clinical records — to enable more accurate disease prediction and drug target identification. Shows that multi-modal pretraining significantly outperforms single-modality models on downstream biomedical tasks."
+      },
+      {
+        "title": "Graph Neural Networks for Knowledge Discovery in Bioinformatics",
+        "year": "2023",
+        "one_line_summary": "Applies graph neural networks to biological knowledge graphs encoding protein interactions, gene pathways, and disease associations to discover novel relationships. Demonstrates state-of-the-art performance on drug repurposing and gene function prediction benchmarks."
+      },
+      {
+        "title": "Large Language Models for Clinical NLP and Medical Text Mining",
+        "year": "2023",
+        "one_line_summary": "Investigates how large language models can be fine-tuned on clinical notes and biomedical literature to extract structured medical knowledge automatically. Proposes domain-adaptive pretraining strategies that improve performance on tasks like diagnosis coding and adverse drug event detection."
+      }
+    ]
+  }
+]

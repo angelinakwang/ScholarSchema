@@ -13,6 +13,9 @@ _UNIVERSITY_DB_KEYS = {
     'uc berkeley': 'berkeley',
     'berkeley': 'berkeley',
     'ucb': 'berkeley',
+    'ucla': 'ucla',
+    'uc los angeles': 'ucla',
+    'university of california, los angeles': 'ucla',
 }
 
 
@@ -48,6 +51,16 @@ def find_professors_from_db(university: str, interests: str) -> list | None:
     interest_tokens = [
         w.lower() for w in re.split(r'[\s,;/]+', interests) if len(w) > 2
     ]
+
+    # "All researchers" mode: no interests provided -> return everyone in the DB.
+    if not interest_tokens:
+        return [
+            {
+                **p,
+                'snippet': p.get('research_summary', ''),
+            }
+            for p in professors
+        ]
 
     def _score(prof: dict) -> int:
         haystack = ' '.join([
