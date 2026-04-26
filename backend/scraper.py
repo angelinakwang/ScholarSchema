@@ -72,18 +72,8 @@ UNIVERSITY_CONFIGS = {
                 'profile_url_pattern': '/Faculty/Homepages/',
             },
         ],
-        # BAIR's student page is JS-rendered — use serper_query instead.
-        # serper_query: searches Google and collects personal-site results.
-        'phd_sources': [
-            {
-                'serper_query': 'site:bair.berkeley.edu/blog/authors PhD student',
-                'type': 'serper',
-            },
-            {
-                'serper_query': 'BAIR Berkeley AI Research PhD student personal website',
-                'type': 'serper',
-            },
-        ],
+        # Intentionally disabled to avoid BAIR/PhD Serper queries.
+        'phd_sources': [],
     },
     # Template:
     # 'stanford': {
@@ -320,7 +310,7 @@ def _build_profile(person: dict, university: str, person_type: str,
                     'year': p.get('year', ''),
                     'one_line_summary': p.get('one_line_summary', ''),
                 }
-                for p in groq_result.get('papers', raw_papers)[:5]
+                for p in groq_result.get('papers', raw_papers)[:4]
                 if isinstance(p, dict)
             ]
     except Exception as e:
@@ -362,11 +352,7 @@ def scrape_university(key: str, skip_names: set = None, limit: int | None = None
     for source in config.get('faculty_sources', []):
         _add(_collect_links(source), 'Faculty')
 
-    for source in config.get('phd_sources', []):
-        if source.get('type') == 'serper':
-            _add(_collect_phd_via_serper(source['serper_query']), 'PhD Student')
-        else:
-            _add(_collect_links(source), 'PhD Student')
+    # PhD student scraping intentionally disabled.
 
     if isinstance(limit, int) and limit > 0:
         all_people = all_people[:limit]

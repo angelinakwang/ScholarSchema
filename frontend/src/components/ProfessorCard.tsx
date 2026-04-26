@@ -22,42 +22,58 @@ function scoreBg(score: number): string {
 
 export default function ProfessorCard({ professor, onEmailClick, saved, onSaveClick }: Props) {
   const [papersOpen, setPapersOpen] = useState(false)
+  const [hovered, setHovered] = useState(false)
 
   const nameUrl = professor.directory_url || professor.profile_url || professor.personal_website || professor.url
+  const canOpenPapers = (professor.papers?.length ?? 0) > 0
 
   return (
-    <div style={styles.card}>
+    <div
+      style={{
+        ...styles.card,
+        ...(canOpenPapers && !papersOpen ? styles.cardClickable : {}),
+        ...(canOpenPapers && hovered && !papersOpen ? styles.cardHover : {}),
+      }}
+      onClick={() => {
+        if (canOpenPapers) setPapersOpen(true)
+      }}
+      onMouseEnter={() => {
+        if (!papersOpen) setHovered(true)
+      }}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div style={styles.top}>
         <div style={styles.nameRow}>
-          <div>
+          <div style={styles.titleWrap}>
             <div style={styles.name}>
               {nameUrl ? (
-                <a href={nameUrl} target="_blank" rel="noopener noreferrer" style={styles.nameLink}>
+                <a
+                  href={nameUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={styles.nameLink}
+                  onClick={e => e.stopPropagation()}
+                >
                   {professor.name}
                 </a>
               ) : professor.name}
             </div>
+            <div style={styles.subline}>
+              {(professor.research_areas?.[0] || professor.type)} • {professor.university}
+            </div>
             <div style={styles.meta}>
               <span style={typeStyle(professor.type)}>{professor.type}</span>
-              <span style={styles.uni}>{professor.university}</span>
-              {professor.email && (
-                <a href={`mailto:${professor.email}`} style={styles.emailChip}>
-                  {professor.email}
+              {nameUrl && (
+                <a href={nameUrl} target="_blank" rel="noopener noreferrer" style={styles.websiteChip} onClick={e => e.stopPropagation()}>
+                  🔗 Website
                 </a>
               )}
             </div>
           </div>
-          <div style={{ ...styles.scoreBadge, background: scoreBg(professor.match_score), color: scoreColor(professor.match_score) }}>
-            <div style={styles.scoreNum}>{professor.match_score}</div>
-            <div style={styles.scoreLabel}>match</div>
+          <div style={{ ...styles.matchPill, background: scoreBg(professor.match_score), color: scoreColor(professor.match_score) }}>
+            ✨ {professor.match_score}% match
           </div>
         </div>
-
-        {professor.match_reason && (
-          <div style={styles.matchReason}>
-            <span style={styles.matchIcon}>✦</span> {professor.match_reason}
-          </div>
-        )}
       </div>
 
       <div style={styles.body}>
@@ -65,36 +81,49 @@ export default function ProfessorCard({ professor, onEmailClick, saved, onSaveCl
           <p style={styles.summary}>{professor.research_summary}</p>
         )}
 
-        {professor.research_areas?.length > 0 && (
-          <div style={styles.tagRow}>
-            {professor.research_areas.map((area, i) => (
-              <span key={i} style={styles.tag}>{area}</span>
-            ))}
-          </div>
-        )}
-
-        {professor.papers?.length > 0 && (
-          <div>
-            <button type="button" style={styles.expandBtn} onClick={() => setPapersOpen(true)}>
-              Show recent papers
-            </button>
-          </div>
-        )}
+        {professor.papers?.length > 0 && <div style={styles.hint}>Click card to view recent papers</div>}
       </div>
 
       <div style={styles.footer}>
-        <button style={styles.emailBtn} onClick={() => onEmailClick(professor)}>
-          ✉ Draft Cold Email
+        <button
+          type="button"
+          style={styles.emailBtn}
+          onClick={e => {
+            e.stopPropagation()
+            onEmailClick(professor)
+          }}
+        >
+          Generate Email ✉️
         </button>
-        <button type="button" style={styles.saveBtn} onClick={() => onSaveClick(professor)}>
-          {saved ? 'Saved' : 'Save'}
+        <button
+          type="button"
+          style={styles.saveBtn}
+          onClick={e => {
+            e.stopPropagation()
+            onSaveClick(professor)
+          }}
+        >
+          {saved ? '★ Saved' : '☆ Save'}
         </button>
       </div>
 
       {papersOpen && (
-        <div style={styles.modalBackdrop} onClick={() => setPapersOpen(false)}>
+        <div
+          style={styles.modalBackdrop}
+          onClick={e => {
+            e.stopPropagation()
+            setPapersOpen(false)
+          }}
+        >
           <div style={styles.modal} onClick={e => e.stopPropagation()}>
-            <button type="button" style={styles.modalClose} onClick={() => setPapersOpen(false)}>
+            <button
+              type="button"
+              style={styles.modalClose}
+              onClick={e => {
+                e.stopPropagation()
+                setPapersOpen(false)
+              }}
+            >
               ×
             </button>
             <div style={styles.modalTitle}>
@@ -133,33 +162,39 @@ function typeStyle(type: string): React.CSSProperties {
   const isPhD = type?.toLowerCase().includes('phd') || type?.toLowerCase().includes('student')
   return {
     display: 'inline-block',
-    padding: '2px 8px',
+    padding: '3px 9px',
     borderRadius: '99px',
     fontSize: '11px',
     fontWeight: 600,
-    letterSpacing: '0.03em',
-    textTransform: 'uppercase' as const,
-    background: isPhD ? '#ede9fe' : '#dbeafe',
-    color: isPhD ? '#7c3aed' : '#1d4ed8',
+    letterSpacing: '0',
+    background: isPhD ? '#d9e7f2' : '#dae7d8',
+    color: isPhD ? '#4f6776' : '#5d715d',
   }
 }
 
 const styles: Record<string, React.CSSProperties> = {
   card: {
     background: '#fff',
-    border: '1.5px solid #e5e7eb',
-    borderRadius: '16px',
-    overflow: 'hidden',
+    border: '2px solid #cfd8d2',
+    borderRadius: '24px',
+    overflow: 'visible',
     display: 'flex',
     flexDirection: 'column',
     transition: 'box-shadow 0.2s',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.08)',
+  },
+  cardClickable: {
+    cursor: 'pointer',
+  },
+  cardHover: {
+    transform: 'translateY(-3px)',
+    boxShadow: '0 14px 28px rgba(30, 41, 59, 0.2)',
   },
   top: {
-    padding: '20px 20px 0',
+    padding: '20px 22px 8px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
+    gap: '8px',
   },
   nameRow: {
     display: 'flex',
@@ -168,101 +203,68 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '12px',
   },
   name: {
-    fontSize: '18px',
-    fontWeight: 700,
-    color: '#1a1a2e',
+    fontSize: '30px',
+    fontWeight: 800,
+    color: '#4b5563',
     lineHeight: 1.3,
   },
   nameLink: {
-    color: '#1a1a2e',
+    color: '#4b5563',
     textDecoration: 'none',
-    borderBottom: '1.5px solid #e5e7eb',
-    transition: 'border-color 0.15s',
+    borderBottom: '1px solid #dbe3df',
+    transition: 'border-color 0.15s, opacity 0.15s',
+  },
+  titleWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  subline: {
+    fontSize: '13px',
+    color: '#8b99a2',
+    fontWeight: 600,
   },
   meta: {
     display: 'flex',
     flexWrap: 'wrap' as const,
     alignItems: 'center',
     gap: '6px',
-    marginTop: '6px',
+    marginTop: '3px',
   },
-  uni: {
-    fontSize: '12px',
-    color: '#6b7280',
-  },
-  emailChip: {
+  websiteChip: {
     fontSize: '11px',
-    color: '#6366f1',
+    color: '#64748b',
     textDecoration: 'none',
-    background: '#eef2ff',
-    padding: '2px 7px',
+    background: '#f1f5f9',
+    padding: '3px 8px',
     borderRadius: '99px',
-  },
-  scoreBadge: {
-    flexShrink: 0,
-    minWidth: '56px',
-    padding: '8px 10px',
-    borderRadius: '12px',
-    textAlign: 'center',
-  },
-  scoreNum: {
-    fontSize: '22px',
-    fontWeight: 800,
-    lineHeight: 1,
-  },
-  scoreLabel: {
-    fontSize: '10px',
     fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: '0.06em',
-    marginTop: '2px',
-    opacity: 0.7,
   },
-  matchReason: {
-    fontSize: '13px',
-    color: '#4b5563',
-    background: '#f9fafb',
-    padding: '8px 12px',
-    borderRadius: '8px',
-    lineHeight: 1.5,
-  },
-  matchIcon: {
-    color: '#8b5cf6',
-    fontSize: '11px',
+  matchPill: {
+    flexShrink: 0,
+    padding: '7px 12px',
+    borderRadius: '999px',
+    textAlign: 'center',
+    fontSize: '14px',
+    fontWeight: 600,
   },
   body: {
-    padding: '16px 20px',
+    padding: '4px 22px 10px',
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
+    gap: '8px',
   },
   summary: {
-    fontSize: '14px',
-    color: '#374151',
-    lineHeight: 1.6,
+    fontSize: '15px',
+    color: '#4b5563',
+    lineHeight: 1.55,
+    margin: 0,
   },
-  tagRow: {
-    display: 'flex',
-    flexWrap: 'wrap' as const,
-    gap: '6px',
-  },
-  tag: {
-    padding: '3px 10px',
-    background: '#f3f4f6',
-    borderRadius: '99px',
-    fontSize: '12px',
-    color: '#374151',
+  hint: {
+    fontSize: '11px',
+    color: '#93a2aa',
     fontWeight: 500,
-  },
-  expandBtn: {
-    background: 'none',
-    border: 'none',
-    color: '#6366f1',
-    fontSize: '13px',
-    fontWeight: 500,
-    padding: '0',
-    cursor: 'pointer',
   },
   papers: {
     marginTop: '10px',
@@ -272,9 +274,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   paper: {
     padding: '10px 12px',
-    background: '#f9fafb',
-    borderRadius: '8px',
-    borderLeft: '3px solid #6366f1',
+    background: '#ffffff',
+    borderRadius: '10px',
+    border: '1px solid #d8e0da',
   },
   paperTitle: {
     fontSize: '13px',
@@ -283,55 +285,55 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '2px',
   },
   paperTitleLink: {
-    color: '#4338ca',
+    color: '#5f7380',
     textDecoration: 'none',
-    borderBottom: '1px solid #c7d2fe',
+    borderBottom: '1px solid #c8d4ce',
   },
   paperYear: {
     fontSize: '11px',
-    background: '#e0e7ff',
-    color: '#4338ca',
+    background: '#e6eeea',
+    color: '#5f6d77',
     padding: '1px 6px',
     borderRadius: '99px',
     fontWeight: 600,
   },
   paperSnippet: {
     fontSize: '12px',
-    color: '#6b7280',
+    color: '#6f7d86',
     marginTop: '4px',
     lineHeight: 1.5,
+    
   },
   footer: {
-    padding: '12px 20px 16px',
-    borderTop: '1px solid #f3f4f6',
+    padding: '0 22px 18px',
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
   },
   emailBtn: {
-    padding: '8px 16px',
-    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+    padding: '10px 18px',
+    background: '#6f8fa3',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '999px',
     color: '#fff',
-    fontSize: '13px',
+    fontSize: '15px',
     fontWeight: 600,
     transition: 'opacity 0.15s',
   },
   saveBtn: {
-    padding: '8px 14px',
-    borderRadius: '8px',
-    border: '1px solid #d1d5db',
+    padding: '10px 18px',
+    borderRadius: '999px',
+    border: '1.5px solid #c8d4ce',
     background: '#fff',
-    fontSize: '13px',
-    color: '#6b7280',
+    fontSize: '15px',
+    color: '#5f6d77',
     cursor: 'pointer',
-    fontWeight: 500,
+    fontWeight: 600,
   },
   modalBackdrop: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(17,24,39,0.45)',
+    background: 'rgba(79, 103, 118, 0.35)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -342,16 +344,16 @@ const styles: Record<string, React.CSSProperties> = {
     width: 'min(720px, 95vw)',
     maxHeight: '80vh',
     overflowY: 'auto',
-    background: '#fff',
+    background: '#fbf8f0',
     borderRadius: '14px',
     padding: '18px 18px 16px',
-    boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+    boxShadow: '0 18px 45px rgba(60, 72, 80, 0.2)',
     position: 'relative',
   },
   modalTitle: {
     fontSize: '16px',
     fontWeight: 700,
-    color: '#111827',
+    color: '#4f6776',
     marginBottom: '12px',
     paddingRight: '28px',
   },
@@ -363,7 +365,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'transparent',
     fontSize: '26px',
     lineHeight: 1,
-    color: '#6b7280',
+    color: '#7b8b94',
     cursor: 'pointer',
   },
 }

@@ -6,7 +6,6 @@ import ProfessorCard from './components/ProfessorCard'
 import EmailModal from './components/EmailModal'
 
 const SAVED_PROFESSOR_KEY = 'saved_professors_v1'
-
 function professorKey(prof: Professor): string {
   return `${prof.university}::${prof.name}`.toLowerCase()
 }
@@ -160,11 +159,11 @@ export default function App() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: '100vh',
-    background: '#f8f9fc',
+    background: '#f5f1e7',
   },
   header: {
-    background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4c1d95 100%)',
-    padding: '40px 24px 48px',
+    background: 'transparent',
+    padding: '54px 24px 24px',
   },
   headerInner: {
     maxWidth: '960px',
@@ -179,18 +178,18 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '12px',
   },
   logoIcon: {
-    fontSize: '28px',
-    color: '#a5b4fc',
+    fontSize: '40px',
+    color: '#b8c8c0',
   },
   logoText: {
-    fontSize: 'clamp(1.5rem, 4vw, 1.85rem)',
+    fontSize: 'clamp(2.1rem, 6vw, 3.1rem)',
     fontWeight: 800,
-    color: '#fff',
+    color: '#4b5563',
     letterSpacing: '-0.02em',
   },
   tagline: {
-    fontSize: 'clamp(0.95rem, 2.2vw, 1.05rem)',
-    color: '#c7d2fe',
+    fontSize: 'clamp(1rem, 2.4vw, 1.2rem)',
+    color: '#6b7280',
     maxWidth: '560px',
     margin: '0 auto',
     lineHeight: 1.55,
@@ -202,12 +201,12 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0 clamp(16px, 4vw, 36px) 96px',
   },
   searchCard: {
-    background: '#fff',
-    border: '1.5px solid #e5e7eb',
-    borderRadius: '16px',
-    padding: 'clamp(22px, 3vw, 36px)',
-    marginTop: '-24px',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+    background: '#f5f1e7',
+    border: 'none',
+    borderRadius: '20px',
+    padding: 'clamp(22px, 3vw, 36px) clamp(10px, 2vw, 18px)',
+    marginTop: '0',
+    boxShadow: 'none',
   },
   loadingState: {
     display: 'flex',
@@ -262,7 +261,7 @@ const styles: Record<string, React.CSSProperties> = {
   resultsTitle: {
     fontSize: '18px',
     fontWeight: 700,
-    color: '#1a1a2e',
+    color: '#3f4d57',
   },
   cacheTag: {
     padding: '2px 8px',
@@ -284,7 +283,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))',
-    gap: 'clamp(16px, 2vw, 22px)',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    gap: '16px',
   },
 }
