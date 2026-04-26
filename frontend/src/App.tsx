@@ -5,15 +5,46 @@ import SearchForm from './components/SearchForm'
 import ProfessorCard from './components/ProfessorCard'
 import EmailModal from './components/EmailModal'
 
+const SAVED_PROFESSOR_KEY = 'saved_professors_v1'
+
+function professorKey(prof: Professor): string {
+  return `${prof.university}::${prof.name}`.toLowerCase()
+}
+
 export default function App() {
   const [results, setResults] = useState<Professor[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [fromCache, setFromCache] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [showSavedOnly, setShowSavedOnly] = useState(false)
+  const [savedKeys, setSavedKeys] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(SAVED_PROFESSOR_KEY)
+      const parsed = raw ? (JSON.parse(raw) as string[]) : []
+      return new Set(parsed)
+    } catch {
+      return new Set()
+    }
+  })
 
   const [emailTarget, setEmailTarget] = useState<Professor | null>(null)
   const [resumeText] = useState('')
+
+  const toggleSaved = (prof: Professor) => {
+    const key = professorKey(prof)
+    setSavedKeys(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      localStorage.setItem(SAVED_PROFESSOR_KEY, JSON.stringify([...next]))
+      return next
+    })
+  }
+
+  const visibleResults = showSavedOnly
+    ? results.filter(prof => savedKeys.has(professorKey(prof)))
+    : results
 
   const handleSearch = async (university: string, interests: string, resume: File | null) => {
     setLoading(true)
@@ -77,21 +108,37 @@ export default function App() {
           </div>
         )}
 
+        {!loading && searched && showSavedOnly && results.length > 0 && visibleResults.length === 0 && !error && (
+          <div style={styles.emptyState}>
+            No saved researchers in these results yet.
+          </div>
+        )}
+
         {results.length > 0 && (
           <section style={styles.results}>
             <div style={styles.resultsHeader}>
               <div style={styles.resultsTitle}>
-                {results.length} researcher{results.length !== 1 ? 's' : ''} found
+                {visibleResults.length} researcher{visibleResults.length !== 1 ? 's' : ''} found
               </div>
+              <label style={styles.savedToggle}>
+                <input
+                  type="checkbox"
+                  checked={showSavedOnly}
+                  onChange={e => setShowSavedOnly(e.target.checked)}
+                />
+                Saved only
+              </label>
               {fromCache && <span style={styles.cacheTag}>cached</span>}
             </div>
 
             <div style={styles.grid}>
-              {results.map((prof, i) => (
+              {visibleResults.map((prof, i) => (
                 <ProfessorCard
                   key={i}
                   professor={prof}
                   onEmailClick={setEmailTarget}
+                  saved={savedKeys.has(professorKey(prof))}
+                  onSaveClick={toggleSaved}
                 />
               ))}
             </div>
@@ -210,6 +257,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: '10px',
     marginBottom: '20px',
+    flexWrap: 'wrap',
   },
   resultsTitle: {
     fontSize: '18px',
@@ -225,6 +273,14 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: '0.04em',
+  },
+  savedToggle: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '13px',
+    color: '#4b5563',
+    marginLeft: '4px',
   },
   grid: {
     display: 'grid',
