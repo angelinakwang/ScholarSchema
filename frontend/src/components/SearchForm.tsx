@@ -6,9 +6,15 @@ interface Props {
 }
 
 /** Values must match backend `_UNIVERSITY_DB_KEYS` in agents/discover.py (case-insensitive). */
-const UNIVERSITIES: { value: string; label: string; disabled?: boolean }[] = [
+const UNIVERSITIES: { value: string; label: string; disabled?: boolean; comingSoon?: boolean }[] = [
   { value: '', label: 'Select a university…', disabled: true },
   { value: 'UC Berkeley', label: 'UC Berkeley' },
+  { value: 'Stanford', label: 'Stanford (coming soon)', comingSoon: true },
+  { value: 'MIT', label: 'MIT (coming soon)', comingSoon: true },
+  { value: 'CMU', label: 'Carnegie Mellon (coming soon)', comingSoon: true },
+  { value: 'UCLA', label: 'UCLA (coming soon)', comingSoon: true },
+  { value: 'Harvard', label: 'Harvard (coming soon)', comingSoon: true },
+  { value: 'Princeton', label: 'Princeton (coming soon)', comingSoon: true },
 ]
 
 const TOPIC_CHIPS = [
@@ -31,6 +37,7 @@ export default function SearchForm({ onSearch, loading }: Props) {
   const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set())
   const [interestsExtra, setInterestsExtra] = useState('')
   const [resume, setResume] = useState<File | null>(null)
+  const [dbStatusMsg, setDbStatusMsg] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
   const toggleTopic = (topic: string) => {
@@ -51,8 +58,14 @@ export default function SearchForm({ onSearch, loading }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!university.trim()) return
+    const selected = UNIVERSITIES.find(u => u.value === university.trim())
+    if (selected?.comingSoon) {
+      setDbStatusMsg(`The ${selected.value} database isn't up yet. Please use UC Berkeley for now.`)
+      return
+    }
     const interests = buildInterests()
     if (!interests) return
+    setDbStatusMsg('')
     onSearch(university.trim(), interests, resume)
   }
 
@@ -69,7 +82,10 @@ export default function SearchForm({ onSearch, loading }: Props) {
           id="university-select"
           style={styles.select}
           value={university}
-          onChange={e => setUniversity(e.target.value)}
+          onChange={e => {
+            setUniversity(e.target.value)
+            setDbStatusMsg('')
+          }}
           required
         >
           {UNIVERSITIES.map(opt => (
@@ -78,7 +94,8 @@ export default function SearchForm({ onSearch, loading }: Props) {
             </option>
           ))}
         </select>
-        <p style={styles.hint}>Only schools with a local researcher database are listed.</p>
+        
+        {dbStatusMsg && <p style={styles.validationHint}>{dbStatusMsg}</p>}
       </div>
 
       <div style={styles.field}>
@@ -176,12 +193,12 @@ const styles: Record<string, React.CSSProperties> = {
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px',
+    gap: '24px',
   },
   field: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '6px',
+    gap: '8px',
   },
   label: {
     fontSize: '14px',
@@ -198,12 +215,12 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '12px',
     color: '#9ca3af',
     margin: 0,
-    marginTop: '2px',
+    marginTop: '4px',
   },
   validationHint: {
     fontSize: '13px',
     color: '#8b99a2',
-    margin: '-8px 0 0 0',
+    margin: '2px 0 0 0',
   },
   optional: {
     fontWeight: 400,
