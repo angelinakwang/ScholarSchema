@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import time
 
 import requests
 from dotenv import load_dotenv
@@ -14,13 +15,26 @@ GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.
 
 
 def _call_gemini(prompt: str) -> str:
-    resp = requests.post(
-        GEMINI_URL,
-        json={"contents": [{"parts": [{"text": prompt}]}]},
-        timeout=30,
-    )
-    resp.raise_for_status()
-    return resp.json()['candidates'][0]['content']['parts'][0]['text']
+    payload = {"contents": [{"parts": [{"text": prompt}]}]}
+    max_retries = 5
+
+    for i in range(max_retries):
+        resp = requests.post(
+            GEMINI_URL,
+            json=payload,
+            timeout=30,
+        )
+        if resp.status_code == 200:
+            return resp.json()['candidates'][0]['content']['parts'][0]['text']
+        if resp.status_code == 429:
+            retry_after = resp.headers.get('Retry-After')
+            wait_time = int(retry_after) if retry_after and retry_after.isdigit() else (2 ** i) + 1
+            print(f"[gemini] rate limited (429), retrying in {wait_time}s...")
+            time.sleep(wait_time)
+            continue
+        resp.raise_for_status()
+
+    raise RuntimeError('Gemini rate limit persisted after retries.')
 
 
 def _extract_person_name(raw_name: str) -> str:
@@ -42,7 +56,7 @@ def _serper_scholar_search(name: str, university: str) -> list:
             'X-API-KEY': SERPER_API_KEY,
             'Content-Type': 'application/json',
         },
-        json={'q': query, 'num': 5},
+        json={'q': query, 'num': 4},
         timeout=20,
     )
     print(f"[scholar] Status: {response.status_code}")
@@ -55,7 +69,7 @@ def _serper_scholar_search(name: str, university: str) -> list:
 def _format_scholar_papers(scholar_results: list) -> tuple:
     papers = []
     papers_lines = []
-    for item in scholar_results[:5]:
+    for item in scholar_results[:4]:
         title = str(item.get('title', '')).strip()
         snippet = str(item.get('snippet', '')).strip()
         link = str(item.get('link', '')).strip()
@@ -91,7 +105,14 @@ Their recent papers:
 Based only on their papers, return valid JSON only, no markdown:
 {{"research_summary": "2 sentence overview",
 "research_areas": ["area1", "area2", "area3"],
-"papers": [{{"title": "title", "year": "2024", "one_line_summary": "what this paper does"}}]}}"""
+"papers": [{{"title": "title", "year": "2024", "one_line_summary": "3-4 sentences covering the problem, approach, and main finding"}}]}}
+
+Rules for each paper summary:
+- Write 3-4 complete sentences.
+- Sentence 1: clearly state the research problem/question.
+- Sentence 2-3: describe the method/approach used.
+- Final sentence: state the main result/finding and why it matters.
+- Be specific and technical, avoid generic wording.""" 
     text = re.sub(r'```json|```', '', _call_gemini(prompt)).strip()
     return json.loads(text)
 
@@ -116,7 +137,14 @@ Return valid JSON only, no markdown:
 "match_score": "integer 0-100",
 "match_reason": "one specific sentence about why they match",
 "papers": [{{"title": "title", "year": "2024",
-"one_line_summary": "what this paper does in one sentence"}}]}}"""
+"one_line_summary": "3-4 sentences covering the problem, approach, and main finding"}}]}}
+
+Rules for each paper summary:
+- Write 3-4 complete sentences.
+- Sentence 1: clearly state the research problem/question.
+- Sentence 2-3: describe the method/approach used.
+- Final sentence: state the main result/finding and why it matters.
+- Be specific and technical, avoid generic wording.""" 
     text = re.sub(r'```json|```', '', _call_gemini(prompt)).strip()
     return json.loads(text)
 
@@ -236,7 +264,8 @@ def score_professors_from_db(professors: list, interests: str, resume_text: str)
     No Scholar API calls needed.
     """
     scored = []
-    use_gemini = bool(GEMINI_API_KEY)
+    # Keep /api/search fast and local: DB scoring should not call external LLMs.
+    use_gemini = False
 
     for prof in professors:
         name = prof.get('name', '')

@@ -91,7 +91,11 @@ export default function SearchForm({ onSearch, loading }: Props) {
               <button
                 key={topic}
                 type="button"
-                onClick={() => toggleTopic(topic)}
+                onMouseDown={e => e.preventDefault()}
+                onClick={e => {
+                  toggleTopic(topic)
+                  e.currentTarget.blur()
+                }}
                 style={{
                   ...styles.chip,
                   ...(on ? styles.chipOn : {}),
@@ -182,7 +186,7 @@ const styles: Record<string, React.CSSProperties> = {
   label: {
     fontSize: '14px',
     fontWeight: 600,
-    color: '#374151',
+    color: '#7b8589',
   },
   subLabel: {
     fontSize: '13px',
@@ -198,7 +202,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   validationHint: {
     fontSize: '13px',
-    color: '#b45309',
+    color: '#8b99a2',
     margin: '-8px 0 0 0',
   },
   optional: {
@@ -206,12 +210,12 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#9ca3af',
   },
   select: {
-    padding: '10px 14px',
-    border: '1.5px solid #e5e7eb',
-    borderRadius: '8px',
+    padding: '12px 16px',
+    border: '2px solid #c7d4cf',
+    borderRadius: '999px',
     fontSize: '15px',
-    color: '#1a1a2e',
-    background: '#fff',
+    color: '#5f6a6f',
+    background: '#ffffff',
     outline: 'none',
     cursor: 'pointer',
     width: '100%',
@@ -224,26 +228,28 @@ const styles: Record<string, React.CSSProperties> = {
   },
   chip: {
     padding: '6px 12px',
-    border: '1.5px solid #e5e7eb',
+    border: '1.5px solid #d7deda',
     borderRadius: '999px',
-    background: '#fafafa',
-    color: '#4b5563',
+    background: '#fcfcfa',
+    color: '#667176',
     fontSize: '13px',
     fontWeight: 500,
     cursor: 'pointer',
     transition: 'all 0.12s',
+    outline: 'none',
+    boxShadow: 'none',
   },
   chipOn: {
-    borderColor: '#818cf8',
-    background: '#eef2ff',
-    color: '#4338ca',
+    borderColor: '#90a9b8',
+    background: '#edf3f6',
+    color: '#4f6776',
   },
   input: {
-    padding: '10px 14px',
-    border: '1.5px solid #e5e7eb',
-    borderRadius: '8px',
+    padding: '12px 16px',
+    border: '2px solid #c7d4cf',
+    borderRadius: '18px',
     fontSize: '15px',
-    color: '#1a1a2e',
+    color: '#5f6a6f',
     background: '#fff',
     outline: 'none',
     transition: 'border-color 0.15s',
@@ -259,14 +265,16 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '8px',
   },
   fileBtn: {
-    padding: '9px 16px',
-    border: '1.5px dashed #d1d5db',
-    borderRadius: '8px',
-    background: '#fafafa',
-    color: '#374151',
+    width: '100%',
+    padding: '28px 18px',
+    border: '2px dashed #c8d3cd',
+    borderRadius: '18px',
+    background: '#ffffff',
+    color: '#6b7280',
     fontSize: '14px',
     fontWeight: 500,
     transition: 'all 0.15s',
+    textAlign: 'center',
   },
   clearBtn: {
     width: '28px',
@@ -281,16 +289,17 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
   },
   submit: {
-    padding: '12px 24px',
-    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+    width: '100%',
+    padding: '13px 24px',
+    background: '#87a5b7',
     border: 'none',
-    borderRadius: '10px',
+    borderRadius: '999px',
     color: '#fff',
-    fontSize: '15px',
-    fontWeight: 600,
+    fontSize: '18px',
+    fontWeight: 700,
     letterSpacing: '0.01em',
     transition: 'opacity 0.15s, transform 0.1s',
-    alignSelf: 'flex-start',
+    alignSelf: 'stretch',
   },
   loadingRow: {
     display: 'flex',
