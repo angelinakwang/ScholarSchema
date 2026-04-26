@@ -7,6 +7,7 @@ load_dotenv()
 
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 _groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+FORCE_DEFAULT_EMAIL = True
 
 
 def draft_email(professor: dict, resume_text: str) -> str:
@@ -16,6 +17,9 @@ def draft_email(professor: dict, resume_text: str) -> str:
     research_summary = professor.get('research_summary', '')
     papers = professor.get('papers', [])
     research_areas = professor.get('research_areas', [])
+
+    if FORCE_DEFAULT_EMAIL:
+        return _fallback_email(last_name, research_summary, papers)
 
     papers_text = '\n'.join(
         f"- {p.get('title', '')} ({p.get('year', '')}): {p.get('one_line_summary', '')}"
@@ -47,7 +51,7 @@ Rules:
 - Then a blank line
 - Then the email body
 - Add spacing after around body
-- No placeholder brackets like [Your Name]
+- Use place holders [Your Name]
 
 Return only the email text, nothing else."""
 
@@ -68,19 +72,25 @@ Return only the email text, nothing else."""
 
 
 def _fallback_email(last_name: str, research_summary: str, papers: list) -> str:
-    paper_line = ''
+    selected_paper_title = ''
     if papers and isinstance(papers[0], dict):
-        p = papers[0]
-        paper_line = f'\n\nI was particularly interested in your recent work on "{p.get("title", "")}".'
+        selected_paper_title = str(papers[0].get('title', '')).strip()
+    research_line = (
+        f' on "{selected_paper_title}"'
+        if selected_paper_title
+        else (f" on {research_summary[:80]}..." if research_summary else "")
+    )
 
     return f"""Subject: Research Opportunity Inquiry
 
 Dear Professor {last_name},
 
-I hope this message finds you well. I am a student deeply interested in your research{' on ' + research_summary[:80] + '...' if research_summary else '.'}{paper_line}
+I am [Name], a student at [University Name] studying [Major]. I recently read your work{research_line}, and I was interested in [explain your interest].
 
 I would love to learn more about ongoing projects in your lab and explore potential opportunities to contribute. I believe my background aligns well with your work and I am eager to discuss how I might support your research.
 
 Would you be available for a brief 15-minute meeting at your convenience?
 
-Best regards,"""
+Best regards,
+[Name]
+"""
