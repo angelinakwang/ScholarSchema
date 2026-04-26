@@ -1,0 +1,147 @@
+[{
+    "name": "Neil Band",
+    "title": "PhD Student, Computer Science",
+    "department": "Computer Science",
+    "type": "PhD Student",
+    "url": "https://nband.github.io/",
+    "profile_url": "https://nband.github.io/",
+    "email": "nband@cs.stanford.edu",
+    "university": "Stanford",
+    "interests": ["LLMs", "machine learning", "reasoning", "synthetic data", "uncertainty", "calibration", "Bayesian deep learning"],
+    "research_summary": "Third-year PhD student at Stanford advised by Tatsunori Hashimoto and Tengyu Ma, working on improving mathematical and general-domain reasoning in large language models through pretraining, synthetic data generation, and novel training objectives. Rhodes Scholar and NSF GRFP fellow whose work spans LLM calibration, synthetic continued pretraining, and uncertainty estimation in deep learning.",
+    "papers": [
+      {
+        "title": "Synthetic Continued Pretraining",
+        "year": "2025",
+        "one_line_summary": "Proposes a simple method to teach LLMs knowledge from corpora as small as 1 million tokens by generating synthetic training data through graph-based knowledge expansion followed by continued pretraining. Oral paper at ICLR 2025 (top 1.8%), showing that small specialized corpora can be amplified into rich training signal without requiring massive datasets."
+      },
+      {
+        "title": "Linguistic Calibration of Long-Form Generations",
+        "year": "2024",
+        "one_line_summary": "Introduces a training objective that teaches language models to express calibrated verbal uncertainty in long-form natural language outputs — saying 'I think' or 'I'm confident' in ways that actually reflect the model's true reliability. Published at ICML 2024, addressing the critical problem of LLMs confidently stating incorrect information."
+      },
+      {
+        "title": "Self-Attention Between Datapoints: Going Beyond Individual Input-Output Pairs in Deep Learning",
+        "year": "2021",
+        "one_line_summary": "Introduces a novel neural architecture that takes an entire dataset as input and uses self-attention to reason about relationships between datapoints rather than processing each example independently. Published at NeurIPS 2021, enabling models to perform in-context learning and few-shot generalization by explicitly attending to training examples at inference time."
+      }
+    ]
+  }, {
+    "name": "Khai Loong Aw",
+    "title": "PhD Student, Computer Science",
+    "department": "Computer Science",
+    "type": "PhD Student",
+    "url": "https://awwkl.github.io/",
+    "profile_url": "https://awwkl.github.io/",
+    "email": "awkhailoong@gmail.com",
+    "university": "Stanford",
+    "interests": ["world models", "cognitive science", "neuroscience", "NLP", "LLMs", "brain alignment", "computer vision", "AI"],
+    "research_summary": "PhD student at Stanford's NeuroAI Lab advised by Daniel Yamins, building world models that bridge AI, cognitive science, and neuroscience. His work shows that AI systems trained like human children — on first-person experience with limited data — can match state-of-the-art models on visual tasks, and that instruction-tuning makes LLMs more aligned with how the human brain processes language.",
+    "papers": [
+      {
+        "title": "Zero-shot World Models Are Developmentally Efficient Learners",
+        "year": "2026",
+        "one_line_summary": "Introduces the Zero-shot World Model (ZWM), which achieves visual competence on diverse cognitive tasks using only the first-person experience of a single child — orders of magnitude less data than standard AI systems require. Demonstrates that human-scale developmental learning is sufficient for zero-shot generalization, advancing a path toward truly data-efficient AI."
+      },
+      {
+        "title": "Instruction-tuning Aligns LLMs to the Human Brain",
+        "year": "2024",
+        "one_line_summary": "Shows that instruction-tuning — the process of fine-tuning LLMs to follow human instructions — significantly improves how well model representations match human brain activity during language processing. Published at COLM 2024, identifying model size and world knowledge as key factors in achieving better brain alignment."
+      },
+      {
+        "title": "Training Language Models to Summarize Narratives Improves Brain Alignment",
+        "year": "2023",
+        "one_line_summary": "Demonstrates that training LLMs to summarize narratives — capturing characters, emotions, and relationships — produces richer internal representations that better predict human brain responses to language. Spotlight paper at ICLR 2023, showing that deeper semantic understanding rather than next-token prediction is key to human-like language processing."
+      }
+    ]
+  },
+  {
+    "name": "Wensi Ai",
+    "title": "PhD Student, Computer Science",
+    "department": "Computer Science",
+    "type": "PhD Student",
+    "url": "https://wensi-ai.github.io/",
+    "profile_url": "https://wensi-ai.github.io/",
+    "email": "wsai@stanford.edu",
+    "university": "Stanford",
+    "interests": ["robotics", "robot learning", "simulation", "imitation learning", "computer vision", "embodied AI", "manipulation"],
+    "research_summary": "PhD student at Stanford's Vision and Learning Lab advised by Fei-Fei Li, working on general-purpose robot systems that combine simulation, imitation learning, and human demonstration data. His work spans robot manipulation benchmarks, teleoperation systems, and neural-signal-controlled robots for everyday activities.",
+    "papers": [
+      {
+        "title": "BEHAVIOR Vision Suite: Customizable Dataset Generation via Simulation",
+        "year": "2024",
+        "one_line_summary": "Introduces a simulation framework for generating large-scale customizable datasets for embodied AI research, enabling systematic control over lighting, object placement, and scene composition. Published at CVPR 2024, providing a scalable alternative to costly real-world data collection for training and evaluating robot perception systems."
+      },
+      {
+        "title": "NOIR: Neural Signal Operated Intelligent Robots for Everyday Activities",
+        "year": "2023",
+        "one_line_summary": "Develops a system that allows humans to control robots using neural signals decoded from non-invasive brain-computer interfaces, enabling people to direct robot manipulation for daily household tasks. Published at CoRL 2023, demonstrating that neural control can generalize to a broad range of manipulation activities without task-specific training."
+      },
+      {
+        "title": "BEHAVIOR-1K: A Human-Centered, Embodied AI Benchmark with 1,000 Everyday Activities",
+        "year": "2022",
+        "one_line_summary": "Presents a large-scale benchmark of 1,000 everyday household activities in a realistic physics simulation, designed to evaluate embodied AI agents on tasks that reflect real human needs. Establishes a new standard for measuring generalization in robot learning by covering an unprecedented breadth of activities across diverse home environments."
+      }
+    ]
+  }, 
+  {
+    "name": "Zakir Durumeric",
+    "title": "Assistant Professor",
+    "department": "Computer Science",
+    "type": "Faculty",
+    "url": "https://zakird.com/",
+    "profile_url": "https://zakird.com/",
+    "email": "zakir@cs.stanford.edu",
+    "university": "Stanford",
+    "interests": ["internet security", "network security", "censorship", "disinformation", "cybercrime", "internet measurement", "online safety"],
+    "research_summary": "Leads the Stanford Empirical Security Research Group, building large-scale measurement systems to understand real-world internet security threats ranging from cybercrime and deepfakes to censorship and disinformation. Founded Censys, a widely-used internet measurement platform, and created the ZMap toolkit used across the security industry for internet-wide scanning.",
+    "papers": [
+      {
+        "title": "Characterizing the MrDeepFakes Sexual Deepfake Marketplace",
+        "year": "2025",
+        "one_line_summary": "Conducts the first systematic empirical study of a large sexual deepfake marketplace, characterizing its scale, business model, and the real-world harm it causes to victims. Best Paper Honorable Mention at USENIX Security 2025, providing evidence that shapes platform governance and policy responses to non-consensual synthetic media."
+      },
+      {
+        "title": "ZMap: Fast Internet-Wide Scanning and its Security Applications",
+        "year": "2013",
+        "one_line_summary": "Introduces ZMap, a tool that can scan the entire IPv4 address space in under an hour on a single machine, enabling researchers to measure global internet security at unprecedented scale. Became one of the most widely used tools in security research and industry, spawning the ZMap toolkit ecosystem now maintained by Durumeric's lab."
+      },
+      {
+        "title": "Let's Encrypt: An Automated Certificate Authority to Encrypt the Entire Web",
+        "year": "2019",
+        "one_line_summary": "Describes the design and deployment of Let's Encrypt, a free automated certificate authority that issues TLS certificates to any website owner in minutes, dramatically lowering the barrier to HTTPS adoption. Published at CCS 2019, Let's Encrypt has since issued over 3 billion certificates and encrypted the majority of web traffic globally."
+      }
+    ]
+  },
+  {
+    "name": "Dan Boneh",
+    "title": "Professor of Computer Science and Electrical Engineering",
+    "department": "Computer Science and Electrical Engineering",
+    "type": "Faculty",
+    "url": "https://crypto.stanford.edu/~dabo/",
+    "profile_url": "https://crypto.stanford.edu/~dabo/",
+    "email": "dabo@cs.stanford.edu",
+    "university": "Stanford",
+    "interests": ["cryptography", "security", "blockchain", "zero-knowledge proofs", "applied cryptography", "machine learning security"],
+    "research_summary": "Co-directs the Stanford Computer Security Lab and leads the Applied Cryptography Group, working on foundational and applied cryptography including zero-knowledge proofs, secure computation, and blockchain protocols. One of the most cited cryptographers in the world, his work underpins real-world security systems used by billions of people including HTTPS, Let's Encrypt, and major blockchain platforms.",
+    "papers": [
+      {
+        "title": "Scaling Proof Systems with Recursive SNARKs",
+        "year": "2022",
+        "one_line_summary": "Develops techniques for composing zero-knowledge proofs recursively, allowing proofs of arbitrary computation to be verified in constant time regardless of the underlying computation's complexity. Enables practical deployment of zk-SNARKs in blockchain systems where verification cost is a critical bottleneck."
+      },
+      {
+        "title": "Watermarking Language Models",
+        "year": "2023",
+        "one_line_summary": "Proposes a cryptographically secure method for embedding undetectable watermarks into text generated by large language models, enabling reliable detection of AI-generated content without degrading output quality. Addresses the growing challenge of distinguishing human-written from AI-generated text in academic, journalistic, and legal contexts."
+      },
+      {
+        "title": "Threshold Signatures from the Algebraic Group Model",
+        "year": "2023",
+        "one_line_summary": "Constructs efficient threshold signature schemes where a group of parties must cooperate to sign a message, with security proofs in the algebraic group model. Directly applicable to securing cryptocurrency wallets and distributed systems where no single party should control a secret key."
+      }
+    ]
+  }
+    
+  
+]

@@ -16,6 +16,8 @@ _UNIVERSITY_DB_KEYS = {
     'ucla': 'ucla',
     'uc los angeles': 'ucla',
     'university of california, los angeles': 'ucla',
+    'stanford': 'stanford',
+    'stanford university': 'stanford',
 }
 
 

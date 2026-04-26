@@ -172,5 +172,34 @@
         "one_line_summary": "Proposes a learning-based method for synthesizing control policies that are guaranteed to satisfy hard safety constraints for hybrid dynamical systems whose dynamics are not fully known. Addresses a key open problem in safe reinforcement learning where formal safety guarantees are needed even when the system model is a black box."
       }
     ]
+  },
+  {
+    "name": "Alan Zhu",
+    "title": "PhD Student, Computer Science",
+    "department": "Computer Science",
+    "type": "PhD Student",
+    "url": "https://az1326.github.io/",
+    "profile_url": "https://az1326.github.io/",
+    "email": "aczhu@berkeley.edu",
+    "university": "Berkeley",
+    "interests": ["LLMs", "machine learning", "data-efficient learning", "AI personalization", "agents", "NLP", "systems for ML"],
+    "research_summary": "Second-year CS PhD student at Berkeley advised by Prof. Joseph Gonzalez, working on data-efficient methods for adapting AI systems to new domains with minimal data. His current focus is LLM personalization from limited user interactions and benchmarking how well AI agents adapt to complex social environments.",
+    "papers": [
+      {
+        "title": "How to Train Your Advisor: Steering Black-Box LLMs with Advisor Models",
+        "year": "2026",
+        "one_line_summary": "Proposes using small 'advisor' models to steer the outputs of large black-box LLMs toward user preferences without requiring access to the base model's weights or training pipeline. Demonstrates that advisor-guided generation can personalize LLM responses effectively from minimal interaction data, enabling cheap personalization of closed-source models like GPT-4."
+      },
+      {
+        "title": "BARE: Combining Base and Instruction-Tuned Language Models for Better Synthetic Data Generation",
+        "year": "2025",
+        "one_line_summary": "Shows that combining outputs from both base and instruction-tuned language models produces higher quality and more diverse synthetic training data than using either model alone. Oral presentation at ICML DataWorld Workshop, demonstrating significant improvements in downstream task performance when training on BARE-generated data."
+      },
+      {
+        "title": "Accelerating Retrieval-Augmented Language Model Serving with Speculation",
+        "year": "2024",
+        "one_line_summary": "Introduces a speculative execution framework for RAG systems that speculatively retrieves and processes documents in parallel before the retrieval decision is finalized, reducing end-to-end latency significantly. Published at ICML 2024, showing up to 2x speedup on RAG workloads without sacrificing output quality."
+      }
+    ]
   }
 ]

@@ -2,6 +2,7 @@ import os
 import json
 import re
 import time
+from collections import Counter
 
 import requests
 from dotenv import load_dotenv
@@ -248,13 +249,36 @@ def enrich_professors(professors: list, interests: str, resume_text: str) -> lis
     return enriched
 
 
-def _keyword_overlap_score(prof: dict, interests: str) -> tuple[int, str]:
-    """Deterministic score when Gemini is unavailable (same token idea as discover.py)."""
-    interest_tokens = [
-        w.lower() for w in re.split(r'[\s,;/]+', interests) if len(w) > 2
+_COMMON_STOPWORDS = {
+    'and', 'the', 'for', 'with', 'from', 'that', 'this', 'your', 'you', 'are',
+    'was', 'were', 'have', 'has', 'had', 'into', 'onto', 'about', 'using', 'use',
+    'through', 'over', 'under', 'between', 'across', 'their', 'there', 'here',
+    'work', 'works', 'research', 'experience', 'project', 'projects', 'student',
+    'university', 'college', 'resume', 'email', 'phone', 'address',
+}
+
+
+def _tokenize_keywords(text: str) -> list[str]:
+    tokens = [
+        t.lower()
+        for t in re.split(r'[^a-zA-Z0-9+#.-]+', text or '')
+        if len(t) > 2
     ]
-    if not interest_tokens:
-        return 55, 'Add more specific topic keywords for finer ranking.'
+    return [t for t in tokens if t not in _COMMON_STOPWORDS]
+
+
+def _top_resume_tokens(resume_text: str, limit: int = 28) -> list[str]:
+    tokens = _tokenize_keywords(resume_text)
+    if not tokens:
+        return []
+    ranked = [tok for tok, _ in Counter(tokens).most_common(limit)]
+    return ranked
+
+
+def _keyword_overlap_score(prof: dict, interests: str, resume_text: str = '') -> tuple[int, str]:
+    """Deterministic score using both explicit interests and resume overlap."""
+    interest_tokens = _tokenize_keywords(interests)
+    resume_tokens = _top_resume_tokens(resume_text, limit=28)
 
     haystack = ' '.join([
         prof.get('research_summary', ''),
@@ -264,12 +288,30 @@ def _keyword_overlap_score(prof: dict, interests: str) -> tuple[int, str]:
             for p in prof.get('papers', [])
         ),
     ]).lower()
-    hits = sum(1 for t in interest_tokens if t in haystack)
-    score = max(40, min(88, 42 + hits * 9))
-    if hits:
-        reason = f'{hits} of your topic keywords appear in their research profile and papers.'
+    interest_hits = sum(1 for t in set(interest_tokens) if t in haystack)
+    resume_hits = sum(1 for t in set(resume_tokens) if t in haystack)
+
+    if not interest_tokens and not resume_tokens:
+        return 55, 'Add topic keywords or upload a resume for personalized ranking.'
+
+    # Interests drive ranking most; resume overlap adds a meaningful boost.
+    score = 42 + (interest_hits * 9) + (min(resume_hits, 8) * 4)
+    if not interest_tokens:
+        # Resume-only mode should still rank clearly without inflating too high.
+        score = 50 + min(resume_hits, 8) * 5
+    score = max(40, min(92, score))
+
+    if interest_hits and resume_hits:
+        reason = (
+            f'{interest_hits} topic keyword matches plus {resume_hits} resume-skill overlaps '
+            f'with this researcher\'s profile and papers.'
+        )
+    elif interest_hits:
+        reason = f'{interest_hits} of your topic keywords appear in this researcher\'s profile and papers.'
+    elif resume_hits:
+        reason = f'{resume_hits} terms from your resume overlap with this researcher\'s profile and papers.'
     else:
-        reason = 'Limited direct keyword overlap with your stated interests.'
+        reason = 'Limited overlap with your current keywords and resume content.'
     return score, reason
 
 
@@ -295,7 +337,7 @@ def score_professors_from_db(professors: list, interests: str, resume_text: str)
         ) or prof.get('research_summary', '')
 
         if not use_gemini:
-            match_score, match_reason = _keyword_overlap_score(prof, interests)
+            match_score, match_reason = _keyword_overlap_score(prof, interests, resume_text)
         else:
             try:
                 safe_resume = resume_text[:300] if resume_text else 'not provided'
@@ -323,7 +365,7 @@ Return valid JSON only, no markdown:
                 match_reason = str(result.get('match_reason', '')).strip()
             except Exception as e:
                 print(f"[score] FAILED for {name}: {e}")
-                match_score, match_reason = _keyword_overlap_score(prof, interests)
+                match_score, match_reason = _keyword_overlap_score(prof, interests, resume_text)
 
         url = prof.get('profile_url') or prof.get('url')
         scored.append({
