@@ -41,18 +41,31 @@ ${papersText.slice(0, 1500)}
 Based only on their papers, return valid JSON only, no markdown:
 {"research_summary": "2 sentence overview", "research_areas": ["area1", "area2"], "papers": [{"title": "...", "year": "...", "one_line_summary": "..."}]}`;
 
-  const resp = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+  const maxRetries = 5;
+  for (let i = 0; i < maxRetries; i++) {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+      }
+    );
+    if (resp.status === 429) {
+      const retryAfter = resp.headers.get("Retry-After");
+      const waitMs = retryAfter && /^\d+$/.test(retryAfter)
+        ? parseInt(retryAfter, 10) * 1000
+        : (2 ** i + 1) * 1000;
+      console.log(`[gemini] rate limited (429), retrying in ${waitMs / 1000}s...`);
+      await sleep(waitMs);
+      continue;
     }
-  );
-  if (!resp.ok) throw new Error(`Gemini ${resp.status}: ${await resp.text()}`);
-  const data = (await resp.json()) as any;
-  const text = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim();
-  return JSON.parse(text);
+    if (!resp.ok) throw new Error(`Gemini ${resp.status}: ${await resp.text()}`);
+    const data = (await resp.json()) as any;
+    const text = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim();
+    return JSON.parse(text);
+  }
+  throw new Error("Gemini rate limit persisted after retries.");
 }
 
 function sleep(ms: number) {

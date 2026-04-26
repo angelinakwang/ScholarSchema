@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import requests
 from dotenv import load_dotenv
 
@@ -54,18 +55,31 @@ Return only the email text, no extra commentary."""
     if not GEMINI_API_KEY:
         return _fallback_email(last_name, research_summary, papers)
 
-    try:
-        resp = requests.post(
-            GEMINI_URL,
-            json={"contents": [{"parts": [{"text": prompt}]}]},
-            timeout=30,
-        )
-        resp.raise_for_status()
-        text = resp.json()['candidates'][0]['content']['parts'][0]['text']
-        return text.strip()
-    except Exception as e:
-        print(f"[email_gen] Gemini failed: {e}")
-        return _fallback_email(last_name, research_summary, papers)
+    max_retries = 5
+    for i in range(max_retries):
+        try:
+            resp = requests.post(
+                GEMINI_URL,
+                json={"contents": [{"parts": [{"text": prompt}]}]},
+                timeout=30,
+            )
+            if resp.status_code == 429:
+                retry_after = resp.headers.get('Retry-After')
+                wait_time = int(retry_after) if retry_after and retry_after.isdigit() else (2 ** i) + 1
+                print(f"[email_gen] rate limited (429), retrying in {wait_time}s...")
+                time.sleep(wait_time)
+                continue
+            resp.raise_for_status()
+            text = resp.json()['candidates'][0]['content']['parts'][0]['text']
+            return text.strip()
+        except requests.HTTPError:
+            raise
+        except Exception as e:
+            print(f"[email_gen] Gemini failed: {e}")
+            return _fallback_email(last_name, research_summary, papers)
+
+    print("[email_gen] rate limit persisted after retries, using fallback")
+    return _fallback_email(last_name, research_summary, papers)
 
 
 def _fallback_email(last_name: str, research_summary: str, papers: list) -> str:
