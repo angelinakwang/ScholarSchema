@@ -1,13 +1,19 @@
 import os
-import re
 import time
-import requests
+from groq import Groq, RateLimitError
 from dotenv import load_dotenv
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+_client = None
+
+
+def _get_client():
+    global _client
+    if _client is None:
+        _client = Groq(api_key=GROQ_API_KEY)
+    return _client
 
 
 def _professor_last_name(full_name: str) -> str:
@@ -52,30 +58,23 @@ Rules:
 
 Return only the email text, no extra commentary."""
 
-    if not GEMINI_API_KEY:
+    if not GROQ_API_KEY:
         return _fallback_email(last_name, research_summary, papers)
 
     max_retries = 5
     for i in range(max_retries):
         try:
-            resp = requests.post(
-                GEMINI_URL,
-                json={"contents": [{"parts": [{"text": prompt}]}]},
-                timeout=30,
+            completion = _get_client().chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "user", "content": prompt}],
             )
-            if resp.status_code == 429:
-                retry_after = resp.headers.get('Retry-After')
-                wait_time = int(retry_after) if retry_after and retry_after.isdigit() else (2 ** i) + 1
-                print(f"[email_gen] rate limited (429), retrying in {wait_time}s...")
-                time.sleep(wait_time)
-                continue
-            resp.raise_for_status()
-            text = resp.json()['candidates'][0]['content']['parts'][0]['text']
-            return text.strip()
-        except requests.HTTPError:
-            raise
+            return completion.choices[0].message.content.strip()
+        except RateLimitError:
+            wait_time = (2 ** i) + 1
+            print(f"[email_gen] rate limited (429), retrying in {wait_time}s...")
+            time.sleep(wait_time)
         except Exception as e:
-            print(f"[email_gen] Gemini failed: {e}")
+            print(f"[email_gen] Groq failed: {e}")
             return _fallback_email(last_name, research_summary, papers)
 
     print("[email_gen] rate limit persisted after retries, using fallback")
