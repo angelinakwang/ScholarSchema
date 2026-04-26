@@ -133,6 +133,20 @@ export default function App() {
     <div style={styles.page}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes cardPopOut {
+          from {
+            opacity: 0;
+            transform: translateY(18px) scale(0.92);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
         @keyframes fadeDown {
           from {
             opacity: 0;
@@ -165,11 +179,17 @@ export default function App() {
 
       <header style={styles.header}>
         <div style={styles.headerInner}>
-          <div style={styles.logo}>
-            <img src={LOGO_SRC} alt="ScholarSchema logo" style={styles.logoImage} />
-            <span style={styles.logoText}>ScholarSchema</span>
+          <div style={styles.heroShell}>
+            <div style={styles.heroGlowA} />
+            <div style={styles.heroGlowB} />
+            <div style={styles.heroSparkleOne}>+</div>
+            <div style={styles.heroSparkleTwo}>+</div>
+            <div style={styles.logo}>
+              <img src={LOGO_SRC} alt="ScholarSchema logo" style={styles.logoImage} />
+              <span style={styles.logoText}>ScholarSchema</span>
+            </div>
+            <div style={styles.tagline}>Find researchers who match your interests and turn that shortlist into polished outreach in one pass.</div>
           </div>
-          <div style={styles.tagline}>Find researchers who match your interests — and reach out in seconds</div>
         </div>
       </header>
 
@@ -255,47 +275,70 @@ export default function App() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: '100vh',
-    background: '#f5f1e7',
+    background: 'transparent',
   },
   header: {
     background: 'transparent',
-    padding: '42px 24px 18px',
+    padding: '34px 24px 18px',
   },
   headerInner: {
-    maxWidth: '960px',
+    maxWidth: 'calc(1160px - clamp(32px, 8vw, 72px))',
     margin: '0 auto',
     animation: 'fadeDown 320ms ease-out',
   },
-  scrollWrap: {
+  heroShell: {
     position: 'relative',
     textAlign: 'center',
-    padding: '28px 28px 26px',
-    borderRadius: '22px',
-    background: 'linear-gradient(180deg, #f7f1de 0%, #efe5cf 100%)',
-    border: '1px solid #deceb2',
-    boxShadow: '0 10px 24px rgba(107, 93, 70, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.55)',
+    padding: '28px clamp(20px, 4vw, 38px) 30px',
+    borderRadius: '28px',
+    background: 'linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(254,243,231,0.92) 45%, rgba(235,248,255,0.92) 100%)',
+    border: '1px solid rgba(106, 119, 158, 0.14)',
+    boxShadow: '0 24px 60px rgba(126, 104, 67, 0.14)',
+    overflow: 'hidden',
   },
-  scrollRollLeft: {
+  heroGlowA: {
     position: 'absolute',
-    top: '-14px',
-    left: '22px',
-    width: '54px',
-    height: '26px',
+    width: '180px',
+    height: '180px',
     borderRadius: '999px',
-    background: 'linear-gradient(180deg, #e8d8b8 0%, #d8c39a 100%)',
-    border: '1px solid #ccb187',
-    boxShadow: '0 3px 8px rgba(95, 75, 44, 0.2)',
+    background: 'radial-gradient(circle, rgba(255, 140, 110, 0.24) 0%, rgba(255, 140, 110, 0) 72%)',
+    top: '-72px',
+    left: '-36px',
+    pointerEvents: 'none',
   },
-  scrollRollRight: {
+  heroGlowB: {
     position: 'absolute',
-    top: '-14px',
-    right: '22px',
-    width: '54px',
-    height: '26px',
+    width: '210px',
+    height: '210px',
     borderRadius: '999px',
-    background: 'linear-gradient(180deg, #e8d8b8 0%, #d8c39a 100%)',
-    border: '1px solid #ccb187',
-    boxShadow: '0 3px 8px rgba(95, 75, 44, 0.2)',
+    background: 'radial-gradient(circle, rgba(84, 125, 240, 0.2) 0%, rgba(84, 125, 240, 0) 74%)',
+    right: '-64px',
+    bottom: '-104px',
+    pointerEvents: 'none',
+  },
+  heroSparkleOne: {
+    position: 'absolute',
+    top: '18px',
+    right: '24px',
+    color: '#4e72d6',
+    fontSize: '24px',
+    fontWeight: 700,
+    opacity: 0.7,
+    lineHeight: 1,
+    transform: 'rotate(18deg)',
+    pointerEvents: 'none',
+  },
+  heroSparkleTwo: {
+    position: 'absolute',
+    bottom: '22px',
+    left: '26px',
+    color: '#df7751',
+    fontSize: '20px',
+    fontWeight: 700,
+    opacity: 0.6,
+    lineHeight: 1,
+    transform: 'rotate(-10deg)',
+    pointerEvents: 'none',
   },
   logo: {
     display: 'flex',
@@ -305,21 +348,22 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '10px',
   },
   logoImage: {
-    width: '56px',
-    height: '56px',
-    borderRadius: '12px',
+    width: '64px',
+    height: '64px',
+    borderRadius: '18px',
     objectFit: 'cover',
+    boxShadow: '0 10px 24px rgba(90, 102, 142, 0.2)',
   },
   logoText: {
     fontSize: 'clamp(2.1rem, 6vw, 3.1rem)',
-    fontWeight: 800,
-    color: '#3f5567',
-    letterSpacing: '-0.02em',
+    fontWeight: 900,
+    color: '#263454',
+    letterSpacing: '0',
   },
   tagline: {
     fontSize: 'clamp(1rem, 2.4vw, 1.2rem)',
-    color: '#6f6552',
-    maxWidth: '620px',
+    color: '#5b6280',
+    maxWidth: '700px',
     margin: '0 auto',
     lineHeight: 1.55,
     textAlign: 'center',
@@ -331,12 +375,12 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0 clamp(16px, 4vw, 36px) 96px',
   },
   searchCard: {
-    background: '#f5f1e7',
-    border: 'none',
-    borderRadius: '20px',
-    padding: 'clamp(22px, 3vw, 36px) clamp(10px, 2vw, 18px)',
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,245,237,0.96) 100%)',
+    border: '1px solid rgba(96, 109, 148, 0.12)',
+    borderRadius: '28px',
+    padding: 'clamp(22px, 3vw, 36px) clamp(16px, 2vw, 24px)',
     marginTop: '0',
-    boxShadow: 'none',
+    boxShadow: '0 18px 40px rgba(94, 74, 46, 0.1)',
     animation: 'fadeDown 420ms ease-out',
   },
   loadingState: {
@@ -350,34 +394,37 @@ const styles: Record<string, React.CSSProperties> = {
     width: '40px',
     height: '40px',
     border: '3px solid #e5e7eb',
-    borderTopColor: '#6366f1',
+    borderTopColor: '#547df0',
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite',
   },
   loadingMsg: {
     fontSize: '16px',
     fontWeight: 600,
-    color: '#374151',
+    color: '#33415f',
   },
   loadingHint: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: '#7b88a3',
   },
   errorBox: {
     marginTop: '24px',
     padding: '16px',
-    background: '#fef2f2',
-    border: '1px solid #fecaca',
-    borderRadius: '10px',
-    color: '#b91c1c',
+    background: '#fff3f0',
+    border: '1px solid #ffcec1',
+    borderRadius: '16px',
+    color: '#b35336',
     fontSize: '14px',
   },
   emptyState: {
     marginTop: '40px',
     textAlign: 'center',
-    color: '#6b7280',
+    color: '#6d7591',
     fontSize: '15px',
-    padding: '40px',
+    padding: '34px',
+    background: 'rgba(255,255,255,0.58)',
+    borderRadius: '20px',
+    border: '1px dashed rgba(98, 113, 148, 0.18)',
   },
   results: {
     marginTop: '32px',
@@ -391,26 +438,30 @@ const styles: Record<string, React.CSSProperties> = {
   },
   resultsTitle: {
     fontSize: '18px',
-    fontWeight: 700,
-    color: '#3f4d57',
+    fontWeight: 800,
+    color: '#31415d',
   },
   cacheTag: {
-    padding: '2px 8px',
-    background: '#f0fdf4',
-    color: '#16a34a',
+    padding: '4px 10px',
+    background: '#edf4ff',
+    color: '#416bcb',
     borderRadius: '99px',
     fontSize: '11px',
-    fontWeight: 600,
+    fontWeight: 800,
     textTransform: 'uppercase',
-    letterSpacing: '0.04em',
+    letterSpacing: '0.06em',
   },
   savedToggle: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '6px',
     fontSize: '13px',
-    color: '#4b5563',
+    color: '#55627e',
     marginLeft: '4px',
+    background: 'rgba(255,255,255,0.72)',
+    padding: '8px 12px',
+    borderRadius: '999px',
+    border: '1px solid rgba(96, 109, 148, 0.12)',
   },
   grid: {
     display: 'grid',
