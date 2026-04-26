@@ -7,6 +7,9 @@ import requests
 from dotenv import load_dotenv
 
 load_dotenv()
+from groq import Groq
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+_groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 SERPER_API_KEY = os.getenv('SERPER_API_KEY')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
@@ -15,27 +18,16 @@ GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.
 
 
 def _call_gemini(prompt: str) -> str:
-    payload = {"contents": [{"parts": [{"text": prompt}]}]}
-    max_retries = 5
+    if not _groq_client:
+        raise ValueError('GROQ_API_KEY missing from .env')
+    response = _groq_client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.3
+    )
+    return response.choices[0].message.content
 
-    for i in range(max_retries):
-        resp = requests.post(
-            GEMINI_URL,
-            json=payload,
-            timeout=30,
-        )
-        if resp.status_code == 200:
-            return resp.json()['candidates'][0]['content']['parts'][0]['text']
-        if resp.status_code == 429:
-            retry_after = resp.headers.get('Retry-After')
-            wait_time = int(retry_after) if retry_after and retry_after.isdigit() else (2 ** i) + 1
-            print(f"[gemini] rate limited (429), retrying in {wait_time}s...")
-            time.sleep(wait_time)
-            continue
-        resp.raise_for_status()
-
-    raise RuntimeError('Gemini rate limit persisted after retries.')
-
+    
 
 def _extract_person_name(raw_name: str) -> str:
     name = (raw_name or '').strip()
@@ -56,7 +48,7 @@ def _serper_scholar_search(name: str, university: str) -> list:
             'X-API-KEY': SERPER_API_KEY,
             'Content-Type': 'application/json',
         },
-        json={'q': query, 'num': 4},
+        json={'q': query, 'num': 5},
         timeout=20,
     )
     print(f"[scholar] Status: {response.status_code}")
@@ -67,14 +59,37 @@ def _serper_scholar_search(name: str, university: str) -> list:
 
 
 def _format_scholar_papers(scholar_results: list) -> tuple:
+    def _extract_year(item: dict, title: str, snippet: str) -> str:
+        # Serper Scholar may place year in different fields depending on result.
+        publication_info = item.get('publicationInfo', {})
+        candidates = [title, snippet]
+        if isinstance(publication_info, dict):
+            candidates.extend([
+                str(publication_info.get('summary', '')).strip(),
+                str(publication_info.get('journal', '')).strip(),
+                str(publication_info.get('conference', '')).strip(),
+                str(publication_info.get('year', '')).strip(),
+            ])
+        else:
+            candidates.append(str(publication_info).strip())
+        # Some payloads include rich snippets under "snippetHighlights".
+        highlights = item.get('snippetHighlights', [])
+        if isinstance(highlights, list):
+            candidates.extend(str(h).strip() for h in highlights if h)
+
+        for text in candidates:
+            m = re.search(r'\b(19|20)\d{2}\b', text)
+            if m:
+                return m.group(0)
+        return ''
+
     papers = []
     papers_lines = []
-    for item in scholar_results[:4]:
+    for item in scholar_results[:5]:
         title = str(item.get('title', '')).strip()
         snippet = str(item.get('snippet', '')).strip()
         link = str(item.get('link', '')).strip()
-        year_match = re.search(r'\b(19|20)\d{2}\b', snippet)
-        year = year_match.group(0) if year_match else ''
+        year = _extract_year(item, title, snippet)
         if not title:
             continue
         papers.append({'title': title, 'snippet': snippet, 'link': link, 'year': year})
@@ -151,7 +166,7 @@ Rules for each paper summary:
 
 def _normalize_papers(papers):
     clean = []
-    for paper in papers[:4]:
+    for paper in papers[:5]:
         if not isinstance(paper, dict):
             continue
         clean.append({
@@ -163,8 +178,9 @@ def _normalize_papers(papers):
 
 
 def enrich_professors(professors: list, interests: str, resume_text: str) -> list:
-    if not GEMINI_API_KEY:
-        raise ValueError('GEMINI_API_KEY is missing from .env')
+    if not GROQ_API_KEY:
+        raise ValueError('GROQ_API_KEY is missing from .env')
+
 
     enriched = []
 
@@ -203,7 +219,7 @@ def enrich_professors(professors: list, interests: str, resume_text: str) -> lis
             groq_result = {
                 'research_summary': professor.get('snippet', '') or f"Researcher at {university} working on {interests}.",
                 'research_areas': [],
-                'papers': [{'title': p['title'], 'year': p.get('year', ''), 'one_line_summary': p.get('snippet', '')} for p in scholar_papers[:3]],
+                'papers': [{'title': p['title'], 'year': p.get('year', ''), 'one_line_summary': p.get('snippet', '')} for p in scholar_papers[:5]],
                 'match_score': 50,
                 'match_reason': 'Potential match based on available research details.',
             }

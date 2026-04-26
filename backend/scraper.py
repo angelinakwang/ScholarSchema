@@ -310,7 +310,7 @@ def _build_profile(person: dict, university: str, person_type: str,
                     'year': p.get('year', ''),
                     'one_line_summary': p.get('one_line_summary', ''),
                 }
-                for p in groq_result.get('papers', raw_papers)[:4]
+                for p in groq_result.get('papers', raw_papers)[:5]
                 if isinstance(p, dict)
             ]
     except Exception as e:

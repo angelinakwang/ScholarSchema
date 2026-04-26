@@ -60,7 +60,7 @@
           "one_line_summary": "This work explores the trade-offs between IPC and maximum clock frequency in an in-order RISC-V processor design, evaluating the impact on overall performance."
         }
       ],
-      "research_summary": "Krste Asanovi\u0107's research encompasses both high-level programming paradigms for efficient multicore utilization and low-level processor microarchitecture. Their work investigates data parallel programming for irregular tree computations, leveraging compiler optimizations, alongside exploring design-space trade-offs for in-order RISC-V processors concerning performance metrics like IPC and clock frequency.",
+      "research_summary": "Krste Asanovi's research encompasses both high-level programming paradigms for efficient multicore utilization and low-level processor microarchitecture. Their work investigates data parallel programming for irregular tree computations, leveraging compiler optimizations, alongside exploring design-space trade-offs for in-order RISC-V processors concerning performance metrics like IPC and clock frequency.",
       "research_areas": [
         "Data Parallel Programming",
         "Compiler Optimization",
