@@ -2,6 +2,7 @@ export interface Paper {
   title: string
   year: string
   one_line_summary: string
+  url?: string
 }
 
 export interface Professor {

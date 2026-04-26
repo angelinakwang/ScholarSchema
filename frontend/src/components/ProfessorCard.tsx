@@ -4,6 +4,8 @@ import type { Professor } from '../types'
 interface Props {
   professor: Professor
   onEmailClick: (professor: Professor) => void
+  saved: boolean
+  onSaveClick: (professor: Professor) => void
 }
 
 function scoreColor(score: number): string {
@@ -18,11 +20,10 @@ function scoreBg(score: number): string {
   return '#f9fafb'
 }
 
-export default function ProfessorCard({ professor, onEmailClick }: Props) {
-  const [expanded, setExpanded] = useState(false)
+export default function ProfessorCard({ professor, onEmailClick, saved, onSaveClick }: Props) {
+  const [papersOpen, setPapersOpen] = useState(false)
 
   const nameUrl = professor.directory_url || professor.profile_url || professor.personal_website || professor.url
-  const profileUrl = professor.personal_website || professor.profile_url || professor.url
 
   return (
     <div style={styles.card}>
@@ -74,22 +75,9 @@ export default function ProfessorCard({ professor, onEmailClick }: Props) {
 
         {professor.papers?.length > 0 && (
           <div>
-            <button style={styles.expandBtn} onClick={() => setExpanded(e => !e)}>
-              {expanded ? '▲ Hide papers' : `▼ ${professor.papers.length} recent paper${professor.papers.length !== 1 ? 's' : ''}`}
+            <button type="button" style={styles.expandBtn} onClick={() => setPapersOpen(true)}>
+              Show recent papers
             </button>
-            {expanded && (
-              <div style={styles.papers}>
-                {professor.papers.map((paper, i) => (
-                  <div key={i} style={styles.paper}>
-                    <div style={styles.paperTitle}>{paper.title}</div>
-                    {paper.year && <span style={styles.paperYear}>{paper.year}</span>}
-                    {paper.one_line_summary && (
-                      <div style={styles.paperSnippet}>{paper.one_line_summary}</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -98,12 +86,45 @@ export default function ProfessorCard({ professor, onEmailClick }: Props) {
         <button style={styles.emailBtn} onClick={() => onEmailClick(professor)}>
           ✉ Draft Cold Email
         </button>
-        {profileUrl && (
-          <a href={profileUrl} target="_blank" rel="noopener noreferrer" style={styles.profileLink}>
-            View Profile →
-          </a>
-        )}
+        <button type="button" style={styles.saveBtn} onClick={() => onSaveClick(professor)}>
+          {saved ? 'Saved' : 'Save'}
+        </button>
       </div>
+
+      {papersOpen && (
+        <div style={styles.modalBackdrop} onClick={() => setPapersOpen(false)}>
+          <div style={styles.modal} onClick={e => e.stopPropagation()}>
+            <button type="button" style={styles.modalClose} onClick={() => setPapersOpen(false)}>
+              ×
+            </button>
+            <div style={styles.modalTitle}>
+              Recent papers by {professor.name}
+            </div>
+            <div style={styles.papers}>
+              {professor.papers.map((paper, i) => (
+                <div key={i} style={styles.paper}>
+                  <div style={styles.paperTitle}>
+                    <a
+                      href={paper.url || `https://scholar.google.com/scholar?q=${encodeURIComponent(paper.title)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={styles.paperTitleLink}
+                    >
+                      {paper.title}
+                    </a>
+                  </div>
+                  <span style={styles.paperYear}>
+                    Published: {paper.year && paper.year.trim() ? paper.year : 'Unknown'}
+                  </span>
+                  {paper.one_line_summary && (
+                    <div style={styles.paperSnippet}>{paper.one_line_summary}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -261,6 +282,11 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#1a1a2e',
     marginBottom: '2px',
   },
+  paperTitleLink: {
+    color: '#4338ca',
+    textDecoration: 'none',
+    borderBottom: '1px solid #c7d2fe',
+  },
   paperYear: {
     fontSize: '11px',
     background: '#e0e7ff',
@@ -292,10 +318,52 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     transition: 'opacity 0.15s',
   },
-  profileLink: {
+  saveBtn: {
+    padding: '8px 14px',
+    borderRadius: '8px',
+    border: '1px solid #d1d5db',
+    background: '#fff',
     fontSize: '13px',
     color: '#6b7280',
-    textDecoration: 'none',
+    cursor: 'pointer',
     fontWeight: 500,
+  },
+  modalBackdrop: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(17,24,39,0.45)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '16px',
+    zIndex: 1000,
+  },
+  modal: {
+    width: 'min(720px, 95vw)',
+    maxHeight: '80vh',
+    overflowY: 'auto',
+    background: '#fff',
+    borderRadius: '14px',
+    padding: '18px 18px 16px',
+    boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+    position: 'relative',
+  },
+  modalTitle: {
+    fontSize: '16px',
+    fontWeight: 700,
+    color: '#111827',
+    marginBottom: '12px',
+    paddingRight: '28px',
+  },
+  modalClose: {
+    position: 'absolute',
+    top: '8px',
+    right: '10px',
+    border: 'none',
+    background: 'transparent',
+    fontSize: '26px',
+    lineHeight: 1,
+    color: '#6b7280',
+    cursor: 'pointer',
   },
 }
